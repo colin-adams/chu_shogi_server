@@ -1,0 +1,7 @@
+package chu_shogi
+
+modules = Piece, Board, Move_state, Game_state, Stack, Game_rules, Move, Coordinate, Lighting
+
+sourcedir = src
+
+pkgs = contrib, effects, containers
