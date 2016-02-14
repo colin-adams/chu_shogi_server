@@ -6,8 +6,6 @@
 ||| This module is here as a convenience than anything else.
 module Stack
 
--- TODO Make popS and peekS 'safe' using the magic of proofs
-
 %access abstract
 %default total
 

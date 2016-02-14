@@ -51,7 +51,7 @@ without_piece_at c b = let r  = index (rank c) b
                        in updateAt (rank c) (\rnk => r') b
 
 ||| Location on a specific board
-Location : Type
+public Location : Type
 Location = (Coordinate, Board)
 
 is_occupied : Location -> Bool
@@ -59,8 +59,8 @@ is_occupied (c, b) = case piece_at c b of
   Nothing => False
   Just _  => True
 
-
-Occupied_location : Type
+||| A piece paired with it's location on a specific board
+public Occupied_location : Type
 Occupied_location = (Location, Piece)
   
 piece_at_flattened : Board -> Fin 144 -> Occupied_location
@@ -81,11 +81,69 @@ pieces b = let sqs  = concat b
                inds = findIndices isJust sqs
            in map (piece_at_flattened b) inds
 
+zero : Fin 12
+zero = FZ
+
+one : Fin 12
+one = FS (FZ)
+
+two : Fin 12
+two = FS (FS (FZ))
+
+three : Fin 12
+three = FS (FS (FS (FZ)))
+
+four : Fin 12
+four = FS (FS (FS (FS (FZ))))
+
+five : Fin 12
+five = FS (FS (FS (FS (FS (FZ)))))
+
+six : Fin 12
+six = FS (FS (FS (FS (FS (FS (FZ))))))
+
+seven : Fin 12
+seven = FS (FS (FS (FS (FS (FS (FS (FZ)))))))
+
+eight : Fin 12
+eight = FS (FS (FS (FS (FS (FS (FS (FS (FZ))))))))
+
+nine : Fin 12
+nine = FS (FS (FS (FS (FS (FS (FS (FS (FS (FZ)))))))))
+
+ten : Fin 12
+ten = FS (FS (FS (FS (FS (FS (FS (FS (FS (FS (FZ))))))))))
+
+eleven : Fin 12
+eleven = FS (FS (FS (FS (FS (FS (FS (FS (FS (FS (FS (FZ)))))))))))
+
+same_and_adjacent : Fin 12 -> List (Fin 12)
+same_and_adjacent o = case o of
+  zero   => [zero, one]
+  one    => [zero, one, two]
+  two    => [one, two, three]
+  three  => [two, three, four]
+  four   => [three, four, five]
+  five   => [four, five, six]
+  six    => [five, six, seven]
+  seven  => [six, seven, eight]
+  eight  => [seven, eight, nine]
+  nine   => [eight, nine, ten]
+  ten    => [nine, ten, eleven]
+  eleven => [ten, eleven]
+  
+
+||| Empty squares 
+abstract empty_squares_adjacent_to_except : (source : Coordinate) -> (origin : Coordinate) -> (bd : Board) ->  List Coordinate
+empty_squares_adjacent_to_except c2 c1 b = let squares    = [Make_coordinate r f | r <- same_and_adjacent (rank c2), f <- same_and_adjacent (file c2)]
+                                               neither_of = \c => c1 /= c && c2 /= c
+  in filter neither_of squares
+
 ||| All squares on @board containing a piece of @colour
 |||
 ||| @colour - subset of pieces
 ||| @board - position we are checking
-pieces_of_colour : (colour : Piece_colour) -> (board : Board) -> List Occupied_location
+abstract pieces_of_colour : (colour : Piece_colour) -> (board : Board) -> List Occupied_location
 pieces_of_colour col b = filter (\ (_, p) => (piece_colour p) == col) (pieces b)
 
 ||| All squares on @board containing a piece of @colour other than @excpet
@@ -154,8 +212,8 @@ check_promotion c1 c2 b pr dec capt = case piece_at c1 b of
 ||| @destination - the square which the piece wants to jump to
 ||| @board - the location of all pieces in the game
 ||| We also return a validity message
-abstract can_jump_to : (piece : Piece) -> (source : Coordinate) ->  (destination : Coordinate) -> (board : Board) -> (Bool, String)
-can_jump_to p c1 c2 b = case direction_and_range (piece_colour p) c1 c2 of
+abstract can_jump_to : (piece : Piece) -> (source : Coordinate) -> (board : Board) -> (destination : Coordinate) -> (Bool, String)
+can_jump_to p c1 b c2 = case direction_and_range (piece_colour p) c1 c2 of
   Nothing     => (False, "Starting and ending squares are not in in orthogonal or diagonal arrangement")
   Just (d, r) => case r == S (S Z) of
     False => (False, "Jumping is only allowed at a range of two")
@@ -195,9 +253,8 @@ can_reach_from c2 c1 b d n col message = case next_square c1 d of
 ||| @board - the location of all pieces in the game
 ||| @message - validity message to append to
 ||| We also return a validity message
-abstract can_range_to : (piece : Piece) -> (source : Coordinate) ->  (destination : Coordinate) -> (board : Board) ->
-  (message : String) -> (Bool, String)
-can_range_to p c1 c2 b message = case direction_and_range (piece_colour p) c1 c2 of
+abstract can_range_to : (piece : Piece) -> (source : Coordinate) -> (board : Board) -> (message : String) -> (destination : Coordinate) -> (Bool, String)
+can_range_to p c1 b message c2 = case direction_and_range (piece_colour p) c1 c2 of
   Nothing     => (False, message ++ ", Destination is not on an orthogonal or diagonal direction")
   Just (d, r) => case r > Z of
     False => (False, message ++ ", Zero range")
@@ -209,7 +266,7 @@ can_range_to p c1 c2 b message = case direction_and_range (piece_colour p) c1 c2
 |||
 ||| This does not apply to Lions - @direction is for a white piece.  
 ||| We also return a validity message
-has_lion_moves : Piece_type -> Direction -> (Bool, String)
+abstract has_lion_moves : Piece_type -> Direction -> (Bool, String)
 has_lion_moves p d = case p of
                           Soaring_eagle => case d of
                             North_east => (True, "")
@@ -236,6 +293,20 @@ has_lion_a_to p c1 c2 = case distance_to c1 c2 of
                                _ => (False, "Lion A moves must be to a square at a distance of 1 from the origin")
 
 
+||| Does @piece have a direct one-square jump to lion move from @source to @destination
+|||
+||| @source is the starting square
+||| @destination is assumed to be empty or occupied by an enemy piece.
+||| We also return a validity reason
+abstract has_lion_b_to : Piece -> (source : Coordinate) -> (destination : Coordinate) -> (Bool, String)
+has_lion_b_to p c1 c2 = case distance_to c1 c2 of
+                               S (S Z) => let d = direction_to p c1 c2 in
+                                      case d of
+                                        Nothing => (False, "The square at a distance of one does not lie on an orthogonal or diagonal line (impossible!)")
+                                        Just dir => has_lion_moves (piece_type p) dir
+                               _       => (False, "Direct jump lion B moves must be to a square at a distance of 2 from the origin")
+
+
 ||| Can piece @occ move to @target on @board?
 |||
 ||| @target - empty square which we try to move to
@@ -243,9 +314,9 @@ has_lion_a_to p c1 c2 = case distance_to c1 c2 of
 ||| @occ - the piece and it's location
 protects : (target : Coordinate) -> (board : Board) -> (occ : Occupied_location) -> Bool
 protects c b o = case o of
-  ((c', b'), p) => case can_jump_to p c' c b of
+  ((c', b'), p) => case can_jump_to p c' b c of
     (True, _)  => True
-    (False, _) => case can_range_to p c' c b "" of
+    (False, _) => case can_range_to p c' b "" c of
       (True, _)  => True
       (False, _) => case (distance_between c' c) <= 2 of
         False => False
@@ -317,3 +388,4 @@ forsythe_rank r = "/" ++ (forsythe_cells 12 r) ++ "/"
 ||| George Hodge's modified Forsythe notation for @board
 abstract forsythe : Board -> String
 forsythe b = concatMap forsythe_rank b
+

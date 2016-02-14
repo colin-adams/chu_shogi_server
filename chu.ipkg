@@ -1,6 +1,6 @@
 package chu_shogi
 
-modules = Piece, Board, Move_state, Game_state, Stack, Game_rules, Move, Coordinate, Lighting
+modules = Piece, Board, Move_state, Game_state, Stack, Game_rules, Move, Coordinate, Lighting, Move_validity, Move_generator
 
 sourcedir = src
 
