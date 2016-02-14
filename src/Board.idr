@@ -119,18 +119,18 @@ eleven = FS (FS (FS (FS (FS (FS (FS (FS (FS (FS (FS (FZ)))))))))))
 
 same_and_adjacent : Fin 12 -> List (Fin 12)
 same_and_adjacent o = case o of
-  zero   => [zero, one]
-  one    => [zero, one, two]
-  two    => [one, two, three]
-  three  => [two, three, four]
-  four   => [three, four, five]
-  five   => [four, five, six]
-  six    => [five, six, seven]
-  seven  => [six, seven, eight]
-  eight  => [seven, eight, nine]
-  nine   => [eight, nine, ten]
-  ten    => [nine, ten, eleven]
-  eleven => [ten, eleven]
+  FZ   => [zero, one]
+  FS (FZ)   => [zero, one, two]
+  FS (FS (FZ)) => [one, two, three]
+  FS (FS (FS (FZ)))  => [two, three, four]
+  FS (FS (FS (FS (FZ)))) => [three, four, five]
+  FS (FS (FS (FS (FS (FZ))))) => [four, five, six]
+  FS (FS (FS (FS (FS (FS (FZ)))))) => [five, six, seven]
+  FS (FS (FS (FS (FS (FS (FS (FZ))))))) => [six, seven, eight]
+  FS (FS (FS (FS (FS (FS (FS (FS (FZ)))))))) => [seven, eight, nine]
+  FS (FS (FS (FS (FS (FS (FS (FS (FS (FZ))))))))) => [eight, nine, ten]
+  FS (FS (FS (FS (FS (FS (FS (FS (FS (FS (FZ)))))))))) => [nine, ten, eleven]
+  FS (FS (FS (FS (FS (FS (FS (FS (FS (FS (FS (FZ))))))))))) => [ten, eleven]
   
 
 ||| Empty squares 
