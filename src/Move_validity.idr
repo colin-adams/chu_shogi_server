@@ -26,6 +26,7 @@ import Piece
 import Coordinate               
 import Data.AVL.Dict
 import Move_generator
+import Direction
 
 %default total
 %access private
@@ -45,21 +46,21 @@ is_valid_lion_double_move_stage_1 : Coordinate -> Piece -> Coordinate -> Maybe P
 is_valid_lion_double_move_stage_1 c1 p2 c2 p3 c3 = let col = opposite_colour (piece_colour p2) 
   in
     case (direction_and_range col c1 c2) of
-      Just (d, r) => case r of
-        SZ => case (direction_and_range col c2 c3) of
-          Just (d', r') => case r' of
-            S Z => if opposite_direction d == d' then
-                (False, "Igui distinct from other double moves")
-              else
-                case p3 of
+      Just (d, r) => if r == 1 then
+        case (direction_and_range col c2 c3) of
+          Just (d', r') => if r' == 1 then
+               if opposite_direction d == d' then
+               	  (False, "Igui distinct from other double moves")
+               else
+		case p3 of
                   Nothing => (True, "")
                   Just p3' => if piece_colour p3' == col then
                                  (False, "Second captured piece is of same colour as moving piece")
                               else
                                 (True, "")
-            _   => (False, "Destination square of double move must be only 1 square away from intermediate square")
+            else (False, "Destination square of double move must be only 1 square away from intermediate square")
           Nothing       => (False, "Destination square is not on an orthogonal or diagonal line from the intermediate square")
-        _  => (False, "Intermediate square imust be one square from starting square")
+        else (False, "Intermediate square imust be one square from starting square")
       _           => (False, "Intermediate square imust be one square from starting square")
  
 ||| Is it valid for a Soaring Eagle @c1 to capture @p2 on @c2 then move to @c3 (capturing if occupied by @p2)?
@@ -68,32 +69,26 @@ is_valid_lion_double_move_stage_1 c1 p2 c2 p3 c3 = let col = opposite_colour (pi
 ||| It is assumed that the moving soaring eagle is of the opposite colour to @p2.
 ||| We also return a validity message
 is_valid_soaring_eagle_double_move_stage_1 : Coordinate -> Piece -> Coordinate -> Maybe Piece -> Coordinate -> (Bool, String)
-is_valid_soaring_eagle_double_move_stage_1 c1 p2 c2 p3 c3 = let col = opposite_colour (piece_colour p2) in
-                                                                case (direction_and_range col c1 c2) of
-                                                                  Just (North_east, r) => 
-                                                                    case (direction_and_range col c2 c3) of
-                                                                      Just (North_east, r2) => case (r, r2) of
-                                                                          (S Z, SZ) => case p3 of
-                                                                            Nothing  => (True, "")
-                                                                            Just p3' => if piece_colour p3' == col then
-                                                                                           (False, "Can't capture a piece on the final square of the same colour")
-                                                                                        else
-                                                                                          (True, "")
-                                                                          _   => (False, "Final square must be one away from intermediate square")
-                                                                      _                => (False, "Final square must be in the same direction as the intermediate square")
-                                                                  Just (North_west, r) => 
-                                                                    case (direction_and_range col c2 c3) of
-                                                                      Just (North_west, r2) => case (r, r2) of
-                                                                          (S Z, SZ) => case p3 of
-                                                                            Nothing  => (True, "")
-                                                                            Just p3' => if piece_colour p3' == col then
-                                                                                           (False, "Can't capture a piece on the final square of the same colour")
-                                                                                        else
-                                                                                          (True, "")
-                                                                          _   => (False, "Final square must be one away from intermediate square")
-                                                                      _                => (False, "Final square must be in the same direction as the intermediate square")                 
-                                                                  _               => (False, "Bad direction for Soaring Eagle lion move")
-
+is_valid_soaring_eagle_double_move_stage_1 c1 p2 c2 p3 c3 = 
+  let col = opposite_colour (piece_colour p2) 
+  in case (direction_and_range col c1 c2) of
+    Just (dir1, r1) => case (direction_and_range col c2 c3) of
+      Just (dir2, r2) =>
+        if r1 == 1 && r2 == 1 && dir1 == dir2 then
+          if dir1 == North_east || dir1 == North_west then
+            case p3 of
+              Nothing  => (True, "")
+              Just p3' => 
+                if piece_colour p3' == col then
+                  (False, "Can't capture a piece on the final square of the same colour")
+                else
+                  (True, "")
+          else
+            (False, "Invalid direction")
+        else
+          (False, "Each step must be one square and both must be in the same direction")
+      _ => (False, "Second step invalid")
+    _ => (False, "First step invalid")
 
 ||| Is it valid for a Horned Falcon @c1 to capture @p2 on @c2 then move to @c3 (capturing if occupied by @p2)?
 |||
@@ -101,21 +96,27 @@ is_valid_soaring_eagle_double_move_stage_1 c1 p2 c2 p3 c3 = let col = opposite_c
 ||| It is assumed that the moving horned falcon is of the opposite colour to @p2.
 ||| We also return a validity message
 is_valid_horned_falcon_double_move_stage_1 : Coordinate -> Piece -> Coordinate -> Maybe Piece -> Coordinate -> (Bool, String)
-is_valid_horned_falcon_double_move_stage_1 c1 p2 c2 p3 c3 = let col = opposite_colour (piece_colour p2) in
-                                                                case (direction_and_range col c1 c2) of
-                                                                  Just (North, r) => 
-                                                                    case (direction_and_range col c2 c3) of
-                                                                      Just (North, r2) => case (r, r2) of
-                                                                          (S Z, SZ) => case p3 of
-                                                                            Nothing  => (True, "")
-                                                                            Just p3' => if piece_colour p3' == col then
-                                                                                           (False, "Can't capture a piece on the final square of the same colour")
-                                                                                        else
-                                                                                          (True, "")
-                                                                          _   => (False, "Final square must be one away from intermediate square")
-                                                                      _                => (False, "Final square must be in the same direction as the intermediate square")                  
-                                                                  _               => (False, "Bad direction for Horned Falcon lion move")
-
+is_valid_horned_falcon_double_move_stage_1 c1 p2 c2 p3 c3 = 
+  let col = opposite_colour (piece_colour p2) 
+  in case (direction_and_range col c1 c2) of
+    Just (dir1, r1) => case (direction_and_range col c2 c3) of
+      Just (dir2, r2) =>
+        if r1 == 1 && r2 == 1 && dir1 == dir2 then
+          if dir1 == North then
+            case p3 of
+              Nothing  => (True, "")
+              Just p3' => 
+                if piece_colour p3' == col then
+                  (False, "Can't capture a piece on the final square of the same colour")
+                else
+                  (True, "")
+          else
+            (False, "Invalid direction")
+        else
+          (False, "Each step must be one square and both must be in the same direction")
+      _ => (False, "Second step invalid")
+    _ => (False, "First step invalid")
+      
 ||| Is @m valid for game state, ignoring lion capture rules and repetition_rule?
 |||
 ||| A reason is given why validity fails
@@ -218,11 +219,16 @@ is_valid_move_stage_2 m st = case is_valid_move_stage_1 m st of
           False => (True, "")
           True  => case direction_and_range (piece_colour p) c1 c2 of
             Nothing => (False, "Impossible. Valid stage1 but no move to destination")
-            Just (_, S Z) => (True, "") -- Ln x Ln at a distance of 1
-            Just (_, S (S Z)) => case is_protected c2 (piece_colour p2) b of
-              True  => (False, "Protected lion at distance 2")
-              False => (True, "")
-            _             =>  (False, "Impossible. Valid stage1 of lion capture but distance to destination is not 1 or 2")
+            Just (_, d) => 
+              if d == 1 then
+                (True, "") -- Ln x Ln at a distance of 1
+              else
+                if d == 2 then
+                  case is_protected c2 (piece_colour p2) b of
+                    True  => (False, "Protected lion at distance 2")
+                    False => (True, "")
+                else
+                  (False, "Impossible. Valid stage1 of lion capture but distance to destination is not 1 or 2")
       _                             => (True, "")
 
 

@@ -20,6 +20,7 @@ module Coordinate
 
 import Data.Fin
 import Piece
+import Direction
 
 %default total
 %access private
@@ -32,30 +33,25 @@ public record Coordinate where
 Eq Coordinate where
   (Make_coordinate r f) == (Make_coordinate r' f') = r == r' && f == f'
 
--- ||| Change in rank and file when moving between two square
--- Need to think how to do this in a provably correct way
--- abstract path_to : Coordinate -> Coordinate -> (Bounded Int, Bounded Int)
-
-append : String -> String -> String
-append s s' = s ++ s'
-
 ||| Standard TSA coordinate notation 
 Show Coordinate where
-  show (Make_coordinate rank file) = append (show $ chr ((toIntNat (finToNat rank)) + ord 'a')) (show $ finToNat file)
+  show (Make_coordinate rank file) = (show $ chr ((toIntNat (finToNat rank)) + ord 'a')) ++ (show $ finToNat file)
 
-||| Difference between rank @source to rank @distance
-rank_difference : Coordinate -> Coordinate -> Nat
+||| Absolute difference between rank @source to rank @distant
+rank_difference : (source : Coordinate) -> (distant : Coordinate) -> Nat
 rank_difference c1 c2 = let r1 = toIntegerNat .finToNat $ rank c1
                             r2 = toIntegerNat . finToNat $ rank c2
                         in fromInteger $ abs (r1 - r2)
 
-||| Difference between file @source to file @distance
-file_difference : Coordinate -> Coordinate -> Nat
+||| Absolute difference between file @source to file @distant
+file_difference : (source : Coordinate) -> (distant : Coordinate) -> Nat
 file_difference c1 c2 = let r1 = toIntegerNat . finToNat $ file c1
                             r2 = toIntegerNat . finToNat $ file c2
                         in fromInteger $ abs (r1 - r2)
 
-||| Distance from @source to @destination
+||| Absolute distance from @source to @destination
+|||
+||| Metric is (forget the name - look it up in a topology primer)
 abstract distance_between : Coordinate -> Coordinate -> Nat
 distance_between c1 c2 = let r = rank_difference c1 c2
                              f = file_difference c1 c2
@@ -73,11 +69,11 @@ distance_to c1 c2 = let r = rank_difference c1 c2
                                 Z => r
                                 _ => if r == f then 
                                         r
-                                        else
-                                          0
+                                     else
+                                       0
 
 ||| Change in rank and file to move from @source to @target
-path_to : Coordinate -> Coordinate -> (Integer, Integer)
+path_to : (source : Coordinate) -> (target : Coordinate) -> (Integer, Integer)
 path_to c1 c2 = let r  = toIntegerNat $ finToNat $ rank c1
                     r' = toIntegerNat $ finToNat $ rank c2
                     f  = toIntegerNat $ finToNat $ file c1
@@ -87,37 +83,37 @@ path_to c1 c2 = let r  = toIntegerNat $ finToNat $ rank c1
 ||| Direction and range for piece-colour from @source to @destination
 |||
 ||| If not one of the principal 8 directions we return Nothing
-abstract direction_and_range : Piece_colour-> Coordinate -> Coordinate -> Maybe (Direction, Nat)
-direction_and_range p c1 c2 = let (y, x) = path_to c1 c2 in
+abstract direction_and_range : Piece_colour-> (source : Coordinate) -> (destination : Coordinate) -> Maybe (Direction, Nat)
+direction_and_range col c1 c2 = let (y, x) = path_to c1 c2 in
                                   case compare x 0 of
                                     GT => if y == 0 then
-                                             case p of
+                                             case col of
                                                White => Just (West, fromInteger x)
                                                Black => Just (East, fromInteger x)
                                           else
                                             if x == y then
-                                              case p of
+                                              case col of
                                                 White => Just (North_east, fromInteger x)
                                                 Black => Just (South_west, fromInteger x)
                                             else
                                               if x == -y then
-                                                case p of
+                                                case col of
                                                   White => Just (South_east, fromInteger x)
                                                   Black => Just (North_west, fromInteger x)         
                                               else
                                                 Nothing
                                     LT => if y == 0 then
-                                             case p of
+                                             case col of
                                                White => Just (West, fromInteger (-x))
                                                Black => Just (East, fromInteger (-x))
                                           else
                                             if x == y then
-                                              case p of
+                                              case col of
                                                 Black => Just (North_east, fromInteger (-x))
                                                 White => Just (South_west, fromInteger (-x))
                                             else
                                               if x == (-y) then
-                                                case p of
+                                                case col of
                                                   Black => Just (South_east, fromInteger y)
                                                   White => Just (North_west, fromInteger y)         
                                               else
@@ -126,17 +122,17 @@ direction_and_range p c1 c2 = let (y, x) = path_to c1 c2 in
                                              Nothing
                                           else
                                             if y > 0 then
-                                              case p of
+                                              case col of
                                                 White => Just (North, fromInteger y)
                                                 Black => Just (South, fromInteger y)
                                             else
-                                              case p of
+                                              case col of
                                                 Black => Just (North, fromInteger (-y))
                                                 White => Just (South, fromInteger (-y))
                                                                              
-||| Direction for a black piece from @source to @destination
+||| Direction for a white piece from @source to @destination
 |||
-||| If @piece is actually white, the the reverse direction will returned
+||| If @piece is actually black, then the reverse direction will be returned
 ||| If not one of the principal 8 directions we return Nothing
 abstract direction_to : Piece -> (source : Coordinate) -> (destination : Coordinate) -> Maybe Direction
 direction_to p c1 c2 = case direction_and_range (piece_colour p) c1 c2 of

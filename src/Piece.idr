@@ -19,6 +19,7 @@
 module Piece
 
 import Data.SortedMap
+import Direction
 
 %default total
 %access private
@@ -28,39 +29,6 @@ public data Promotion_status = Not_yet_promoted
   | No_promotion
   | Declined_to_promote
   
-||| Directions of movement (North is the direction the Black player faces when seated at the board)
-public data Direction = North
-               | East
-               | South
-               | West
-               | North_east
-               | South_east
-               | South_west
-               | North_west
-         
-Eq Direction where
-  North == North = True
-  South == South = True
-  West == West = True
-  East == East = True
-  North_east == North_east = True
-  South_east == South_east = True
-  South_west == South_west = True
-  North_west == North_west = True
-  _ == _ = False
-
-  
-abstract opposite_direction : Direction -> Direction
-opposite_direction d = case d of
-  North => South
-  South => North
-  East => West
-  West => East
-  North_west => South_east
-  North_east => South_west
-  South_east => North_west
-  South_west => North_east
- 
 ||| Designation of a player and owner of pieces
 public data Piece_colour =
   ||| First player in even games
