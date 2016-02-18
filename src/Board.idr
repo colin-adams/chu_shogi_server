@@ -34,21 +34,16 @@ Square = Maybe (Piece, Promotion_status)
 abstract Board : Type
 Board = Matrix 12 12 Square
 
-
-append : String -> String -> String
-append s s' = s ++ s'
-
 ||| Piece on @square of @board, if any, along with it's promotion status
 public piece_at : Coordinate -> Board -> Square
-piece_at c b = let r = index (rank c) b in
-               index (file c) r
+piece_at c b = indices (rank c) (file c) b
 
 ||| Copy of @board where @location is empty
 |||
 ||| @location - square to be emptied
 ||| @board - the position we are copying
 without_piece_at : (location : Coordinate) -> (board : Board) -> Board
-without_piece_at c b = let r  = index (rank c) b
+without_piece_at c b = let r  = getRow (rank c) b
                            r' = updateAt (file c) (\sq => Nothing) r
                        in updateAt (rank c) (\rnk => r') b
 
@@ -377,7 +372,7 @@ leading_blanks b r = case length b of
 ||| @rank - row of the board being described
 forsythe_cells : (n : Nat) -> (rank : Vect n Square) -> String
 forsythe_cells n r = let (blanks, rest) = break isNothing (toList r)
-                   in append (leading_blanks blanks rest) (suffix (rest)) where
+                   in (leading_blanks blanks rest) ++ (suffix (rest)) where
                      suffix : List Square -> String
                      suffix s = case head' s of
                        Nothing   => ""
