@@ -19,7 +19,7 @@
 ||| Conceptual representation of (as opposed to a graphical display of) the board at a given instance in time
 module Board
 
-import Data.Vect
+import Data.Matrix
 import Piece
 import Direction
 import Coordinate
@@ -32,7 +32,7 @@ Square = Maybe (Piece, Promotion_status)
 
 ||| A 12 x 12 matrix of Squares
 abstract Board : Type
-Board = Vect 12 (Vect 12 Square)
+Board = Matrix 12 12 Square
 
 
 append : String -> String -> String
