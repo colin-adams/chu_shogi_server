@@ -478,3 +478,15 @@ promotion piece =
       Go_between => record {piece_type = Promoted_go_between} piece
       _ => piece
 
+||| Did @p promote?
+|||
+||| @p - piece before move
+||| @st - promotion status before move
+||| @pr - did @p promote?
+||| @dec - did @p decline to promote
+abstract promoted_piece : (p : Piece) -> (st : Promotion_status) -> (pr: Bool) -> (dec : Bool) -> (Piece, Promotion_status)
+promoted_piece p st pr dec = case pr of
+  True  => ((promotion p), No_promotion)
+  False => case dec of
+    True  => (p, Declined_to_promote)
+    False => (p, st)

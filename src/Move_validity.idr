@@ -27,6 +27,7 @@ import Coordinate
 import Data.AVL.Dict
 import Move_generator
 import Direction
+import Stack
 
 %default total
 %access private
@@ -232,14 +233,6 @@ is_valid_move_stage_2 m st = case is_valid_move_stage_1 m st of
       _                             => (True, "")
 
 
-||| New board and game state resulting from applying @move to @board in @state
-|||
-||| @move - the move to apply.
-||| @board - the position to be updated
-||| @state - the existing state of the game
-updated_by_move : (move : Move) -> (board : Board) -> (state : Game_state) -> (Board, Game_state)
-updated_by_move m b st = (b, st) -- TODO
-
 ||| Is @m a valid move (ignoring repetition rules)?
 |||
 ||| @state - state of the game, for lion rules
@@ -265,8 +258,7 @@ attack_count b col st = let moves = generate_captures b col
 is_repetition : (board : Board) ->  (state : Game_state) -> (position : String) -> Bool
 is_repetition b st pos = case st of
   Not_running _ => False
-  Running bd mv_st _ stk  => case stk of
-    Make_stack prev_bd prev_st _ prev_mv moves => case mv_st of
+  Running bd mv_st _ _  => case mv_st of
       Make_move_state blk_to_play _ _ white_forsythes black_forsythes => let positions = if blk_to_play then black_forsythes else white_forsythes
         in case lookup pos positions of
           Nothing => False

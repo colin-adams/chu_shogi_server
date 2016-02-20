@@ -38,11 +38,30 @@ Board = Matrix 12 12 Square
 public piece_at : Coordinate -> Board -> Square
 piece_at c b = indices (rank c) (file c) b
 
+||| Copy of @board where @piece sits on  @location
+|||
+||| @piece - piece to be added
+||| @location - square to be modified
+||| @board - the position we are copying
+abstract with_piece_at : (piece: (Piece, Promotion_status)) -> (location : Coordinate) -> (board : Board) -> Board
+with_piece_at (p, st) c b = let r  = getRow (rank c) b
+                                r' = updateAt (file c) (\sq => Just (p, st)) r
+                            in updateAt (rank c) (\rnk => r') b
+
+||| promotion status of piece (if any) @source on @bd
+|||
+||| @source - location of piece
+||| @bd - position we examine
+abstract promotion_status_at : (source : Coordinate) -> (bd : Board) -> Promotion_status
+promotion_status_at source bd = case piece_at source bd of
+  Nothing => No_promotion
+  Just (_, st) => st
+  
 ||| Copy of @board where @location is empty
 |||
 ||| @location - square to be emptied
 ||| @board - the position we are copying
-without_piece_at : (location : Coordinate) -> (board : Board) -> Board
+abstract without_piece_at : (location : Coordinate) -> (board : Board) -> Board
 without_piece_at c b = let r  = getRow (rank c) b
                            r' = updateAt (file c) (\sq => Nothing) r
                        in updateAt (rank c) (\rnk => r') b
@@ -391,4 +410,32 @@ forsythe_rank r = "/" ++ (forsythe_cells 12 r) ++ "/"
 ||| @board - position being described
 abstract forsythe : (board : Board) -> String
 forsythe b = concatMap forsythe_rank b
+
+||| Number of kings/crown princes on board of given colour
+king_count : Piece_colour -> Board -> Fin 3
+king_count col b = let ocl  = pieces_of_colour col b
+                       wps  = map snd ocl
+                       kgs  = findIndices is_king wps
+                       cnt  = length kgs
+                   in case natToFin cnt 3 of
+                       Nothing => FZ -- this would be a bug
+                       Just c  => c
+
+||| Number of white kings/crown princes on board
+abstract white_king_count : Board -> Fin 3
+white_king_count b = king_count White b
+                       
+||| Number of black kings/crown princes on board
+abstract black_king_count : Board -> Fin 3
+black_king_count b = king_count Black b
+
+||| Number of non-kings/crown princes on board
+abstract non_king_count : Board -> Fin 95
+non_king_count b = let ocl = pieces b
+                       pcs = map snd ocl
+                       nks = findIndices (not . is_king) pcs
+                       cnt = length nks
+                   in case natToFin cnt 95 of
+                       Nothing => FZ -- this would be a bug
+                       Just c  => c                       
 
