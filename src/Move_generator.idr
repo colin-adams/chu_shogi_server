@@ -18,6 +18,7 @@
 ||| Generate candidate moves - lion capture rules, promotion rules and repetition are not considered for validity
 module Move_generator
 
+import Data.Vect
 import Board
 import Move
 import Piece

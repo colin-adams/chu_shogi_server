@@ -27,11 +27,11 @@ import Coordinate
 %default total
 %access private
 
-Square : Type
+public Square : Type
 Square = Maybe (Piece, Promotion_status)
 
 ||| A 12 x 12 matrix of Squares
-abstract Board : Type
+public Board : Type
 Board = Matrix 12 12 Square
 
 ||| Piece on @square of @board, if any, along with it's promotion status

@@ -18,6 +18,7 @@
 ||| Validating a Move
 module Move_validity
 
+import Data.Vect
 import Game_state
 import Move_state
 import Board
@@ -28,6 +29,7 @@ import Data.AVL.Dict
 import Move_generator
 import Direction
 import Stack
+import Forsythe_parser
 
 %default total
 %access private

@@ -25,7 +25,9 @@ import Move
 import Effects
 import Data.Fin
 import Data.So
+import Data.Vect
 import Data.AVL.Dict
+import Piece
 
 %default total
 %access private
@@ -34,27 +36,33 @@ import Data.AVL.Dict
 
 Possible Actions are:
 
-{Preconditions}                                                                                                     Action             {Postconditions}
+{Preconditions}                                                                                                     Action                 {Postconditions}
 
-{Game is not running with a reason of Not_yet_started}                                                              Start a game       {Game is running with an empty move history, both king counts and non_kings > FZ}
+{Game is not running with a reason of Not_yet_started}                                                              Start a game             {Game is running with an empty move history, both king counts and non_kings > FZ. Black to play}
 
-{Game is running and Black_kings = FS n and White_kings = FZ}                                                       Black wins         {Game is not running with a reason of Black_won}
+{Game is running with an empty move history, both king counts and non_kings > FZ. Black to play}                    Take handicap            {Game is running with a singleton move history, both king counts and non_kings > FZ. White to play}
 
-{Game is running and Black_kings = FZ and White_kings = FS n}                                                       White wins         {Game is not running with a reason of White_won}
+{Game is running and Black_kings = FS n and White_kings = FZ}                                                       Black wins               {Game is not running with a reason of Black_won}
 
-{Game is running and Black_kings = FS n == White_kings = FS n and black_kings = White_kings and non_kings = FZ}     Declare draw       {Game is not running with a reason of Draw}
+{Game is running and Black_kings = FZ and White_kings = FS n}                                                       White wins               {Game is not running with a reason of White_won}
 
-{Game is running and Black_kings = FS n and White_kings = FS n and non_kings = FS n}                                Agree draw         {Game is not running with a reason of Draw}
+{Game is running and Black_kings = FS n == White_kings = FS n and black_kings = White_kings and non_kings = FZ}     Declare draw             {Game is not running with a reason of Draw}
 
-{Game is running and Black_kings = FS n and White_kings = FS n and white is on move}                                White resigns      {Game is not running with a reason of Black_won}
+{Game is running and Black_kings = FS n and White_kings = FS n and non_kings = FS n}                                Agree draw               {Game is not running with a reason of Draw}
 
-{Game is running and Black_kings = FS n and White_kings = FS n and black is on move}                                Black resigns      {Game is not running with a reason of White_won}
+{Game is running and Black_kings = FS n and White_kings = FS n and white is on move}                                White resigns            {Game is not running with a reason of Black_won}
 
-{Game is running and Black_kings = FS n and White_kings = FS n and black is on move}                                Black makes a move {Game is running and white is on move or Game is not running with a reason of Black_won}
+{Game is running and Black_kings = FS n and White_kings = FS n and black is on move}                                Black resigns            {Game is not running with a reason of White_won}
 
-{Game is running and Black_kings = FS n and White_kings = FS n and white is on move}                                White makes a move {Game is running and black is on move or Game is not running with a reason of White_won}
+{Game is running and Black_kings = FS n and White_kings = FS n and black is on move}                                Black makes a move       {Game is running and white is on move or Game is not running with a reason of Black_won}
 
-{}                                                                                                                  Display the game   {}
+{Game is running and Black_kings = FS n and White_kings = FS n and white is on move}                                White makes a move       {Game is running and black is on move or Game is not running with a reason of White_won}
+
+{Game is running and Black_kings = FS n and White_kings = FS n and black is on move}                                Black runs out of time   {Game is not running with a reason of White_won} -- includes connection timeout
+
+{Game is running and Black_kings = FS n and White_kings = FS n and white is on move}                                White runs out of time   {Game is not running with a reason of black_won} --  ditto
+
+
 -}
 
 ||| Bounded natural numbers for enforcing preconditions below
@@ -107,17 +115,19 @@ no_result_yet b w oth = Make_king_count (king_count_from_bounded b) (king_count_
 
 data Game_rules : Effect where
 
-  Start_game    : (b : Board, m : Move_state) -> sig Game_rules (Board, Move_state) (Chu_game (Not_running Not_yet_started)) 
+  Start_game    : sig Game_rules (Board, Move_state) (Chu_game (Not_running Not_yet_started)) 
     (\bm => Chu_game (Running (fst bm) (snd bm) no_result_yet _)) -- TODO arguments to no_result_yet and validity conditions on arguments and initial move stack
-  Black_wins    : sig Game_rules () (Chu_game (Running _ _ black_winning _)) (Chu_game (Not_running Black_won))
-  White_wins    : sig Game_rules () (Chu_game (Running _ _ white_winning _)) (Chu_game (Not_running White_won))
-  Declare_draw  : sig Game_rules () (Chu_game (Running _ _ compulsory_draw _)) (Chu_game (Not_running Draw))
-  Agree_draw    : sig Game_rules () (Chu_game (Running _ _ voluntary_draw _)) (Chu_game (Not_running Draw))
-  White_resigns : sig Game_rules () (Chu_game (Running _ (Make_move_state False _ _ _ _) resignation _)) (Chu_game (Not_running Black_won))
-  Black_resigns : sig Game_rules () (Chu_game (Running _ black_to_move resignation _)) (Chu_game (Not_running White_won))  
-  Display_game  : sig Game_rules () (Chu_game h) -- very unsure if this belongs here
-  Black_moves   : (m : Move) -> sig Game_rules () (Chu_game (Running _ black_to_move _ _)) (Chu_game (Running _ white_to_move _ _))
-  White_moves   : (m : Move) -> sig Game_rules () (Chu_game (Running _ white_to_move _ _)) (Chu_game (Running _ black_to_move _ _)) -- these all need more prescision to show the state changes -- should we have a Bool result for validity? or a dependent pair on input, with a witness to validity?
+  Black_wins        : sig Game_rules () (Chu_game (Running _ _ black_winning _)) (Chu_game (Not_running Black_won))
+  White_wins        : sig Game_rules () (Chu_game (Running _ _ white_winning _)) (Chu_game (Not_running White_won))
+  Declare_draw      : sig Game_rules () (Chu_game (Running _ _ compulsory_draw _)) (Chu_game (Not_running Draw))
+  Agree_draw        : sig Game_rules () (Chu_game (Running _ _ voluntary_draw _)) (Chu_game (Not_running Draw))
+  White_resigns     : sig Game_rules () (Chu_game (Running _ (Make_move_state False _ _ _ _) resignation _)) (Chu_game (Not_running Black_won))
+  Black_resigns     : sig Game_rules () (Chu_game (Running _ black_to_move resignation _)) (Chu_game (Not_running White_won))  
+  White_out_of_time : sig Game_rules () (Chu_game (Running _ (Make_move_state False _ _ _ _) _  _)) (Chu_game (Not_running Black_won))
+  Black_out_of_time : sig Game_rules () (Chu_game (Running _ (Make_move_state True _ _ _ _) _  _)) (Chu_game (Not_running White_won))
+  Take_handicap     : (forsythe : String) -> sig Game_rules () (Chu_game (Running _ black_to_move _ _)) (Chu_game (Running _ white_to_move _ _))
+  Black_moves       : (m : Move) -> sig Game_rules () (Chu_game (Running _ black_to_move _ _)) (Chu_game (Running _ white_to_move _ _))
+  White_moves       : (m : Move) -> sig Game_rules () (Chu_game (Running _ white_to_move _ _)) (Chu_game (Running _ black_to_move _ _)) -- these all need more prescision to show the state changes -- should we have a Bool result for validity? or a dependent pair on input, with a witness to validity?
   
 CHU_SHOGI : Game_state -> EFFECT
 CHU_SHOGI h = MkEff (Chu_game h) Game_rules

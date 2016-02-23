@@ -20,6 +20,7 @@ module Game_state
   -- This does not include any state used by a specific client, such as interactive state
 
 import Data.Fin
+import Data.Vect
 import Board
 import Move_state
 import Stack

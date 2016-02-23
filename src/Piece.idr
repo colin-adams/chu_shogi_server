@@ -294,10 +294,67 @@ abbreviation_map =
               ("+P", Promoted_pawn),
               ("+GB", Promoted_go_between)
              ]
+||| Map of uppercase abbreviation to abbreviation
+canonical_abbreviation_map : SortedMap String String
+canonical_abbreviation_map =
+    fromList [("LN", "Ln"),
+              ("L", "L"),
+              ("RC", "RC"),
+              ("SM", "SM"),
+              ("VM", "VM"),
+              ("+L", "+L"),
+              ("R", "R"),
+              ("G", "G"),
+              ("C", "C"),
+              ("S", "S"),
+              ("B", "B"),
+              ("K", "K"),
+              ("DE", "DE"),
+              ("+DE", "+DE"),
+              ("+R", "+R"),
+              ("+G", "+G"),
+              ("+S", "+S"),
+              ("+C", "+C"),
+              ("+B", "+B"),
+              ("FL", "FL"),
+              ("Ph", "Ph"),
+              ("Ky", "Ky"),
+              ("FK", "FK"),
+              ("+Ph", "+Ph"),
+              ("+Ky", "+Ky"),
+              ("BT", "BT"),
+              ("+BT", "+BT"),
+              ("+VM", "+VM"),
+              ("+RC", "+RC"),
+              ("+FL", "+FL"),
+              ("+SM", "+SM"),
+              ("DH", "DH"),
+              ("DK", "DK"),
+              ("+DH", "+DH"),
+              ("+DK", "+DK"),
+              ("P", "P"),
+              ("GB", "GB"),
+              ("+P", "+P"),
+              ("+GB", "+GB")
+             ]
 
+canononical_abbreviation : String -> String
+canononical_abbreviation abbrev = case lookup abbrev canonical_abbreviation_map of
+  Nothing => ""
+  Just ab => ab
+
+||| Is @abbrev the case-insensitive abbreviation of a piece-type?
+|||
+||| @abbrev - the abbreviation to test
+abstract is_abbrev : (abbrev : String) -> Bool
+is_abbrev abbrev = let abbrevs = map (toLower . fst) (toList abbreviation_map)
+                   in elem abbrev abbrevs
+                   
 ||| Creates a Piece_type given it's standard TSA abbreviation
-piece_from_abbreviation : String -> Maybe Piece_type 
-piece_from_abbreviation abbrev = lookup abbrev abbreviation_map
+abstract piece_from_abbreviation : String -> Maybe Piece_type 
+piece_from_abbreviation abbrev = let abbrev'  = toUpper abbrev
+                                     abbrev'' = canononical_abbreviation abbrev'
+                                 in  lookup abbrev'' abbreviation_map
 
 
 ||| Is @ piece subject to the special rules for Lions?
