@@ -1,7 +1,9 @@
 package chu_shogi
 
-modules = Direction, Piece, Board, Move_state, Game_state, Stack, Game_rules, Move, Coordinate, Lighting, Move_validity, Move_generator, Forsythe_parser
+modules = Direction, Piece, Board, Move_state, Game_state, Stack, Game_rules, Move, Coordinate, Lighting, Move_validity, Move_generator, Forsythe_parser, Test.Forsythe_parser
 
 sourcedir = src
 
 pkgs = contrib, effects, containers, lightyear
+
+tests = Test.Forsythe_parser.test_start_position

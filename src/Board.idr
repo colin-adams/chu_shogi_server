@@ -254,7 +254,7 @@ can_jump_to p c1 b c2 = case direction_and_range (piece_colour p) c1 c2 of
 can_reach_from : (target : Coordinate) -> (source : Coordinate) -> (board : Board) -> (direction : Direction) -> (moves : Nat) ->
  (colour : Piece_colour) -> (message :String) -> (Bool, String)
 can_reach_from c2 c1 b d n col message = case next_square c1 d of
-  Nothing => (False, message ++", No additional square on the board in that direction")
+  Nothing => (False, message ++ ", No additional square on the board in that direction")
   Just c' => case piece_at c' b of
     Nothing => case c' == c2 of
       True => (True, "")
@@ -368,11 +368,12 @@ is_protected c col b = let b2 = without_piece_at c b
 forsythe_cell : Square -> String
 forsythe_cell c = case c of
   Nothing => ""
-  Just (p, _) => let abbrev = abbreviation (piece_type p)
-                     colour = piece_colour p
+  Just (p, st) => let abbrev  = abbreviation (piece_type p)
+                      abbrev' = if st == Declined_to_promote then "=" ++ abbrev else abbrev
+                      colour  = piece_colour p
                   in case colour of
-                    White => toUpper abbrev
-                    Black => toLower abbrev
+                    White => toUpper abbrev'
+                    Black => toLower abbrev'
                      
 ||| Forsythe notation for a consecutive series of blanks, followed by a comma if there are occupied cells following                         
 leading_blanks : List Square -> List Square -> String
@@ -405,7 +406,7 @@ forsythe_cells n r = let (blanks, rest) = break isNothing (toList r)
 forsythe_rank : (rank : Vect 12 Square) -> String
 forsythe_rank r = "/" ++ (forsythe_cells 12 r) ++ "/"
 
-||| George Hodge's modified Forsythe notation for @board
+||| George Hodge's modified Forsythe notation for Chu Shogi, suplemented by a prefix of = to indicate deferred promotion, of @board
 |||
 ||| @board - position being described
 abstract forsythe : (board : Board) -> String

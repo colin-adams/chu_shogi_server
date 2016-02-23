@@ -15,7 +15,7 @@
 --  You should have received a copy of the GNU General Public License
 --  along with chu-shogi.  If not, see <http://www.gnu.org/licenses/>.
 
-||| Inverse of Board.forsythe
+||| Inverse of Board.forsythe - this parses George Hodges' Forsythe notation for Chu Shogi, with the addition of a prefix = to indicate deferred promotion
 module Forsythe_parser
 
 import Lightyear
@@ -36,30 +36,39 @@ col c = case isUpper c of
 parse_promoted : Parser (Maybe Char)
 parse_promoted = opt (char '+')
 
-||| Combine one or two characters innto a list
+||| Parse = prefix
+parse_deferred : Parser (Maybe Char)
+parse_deferred = opt (char '=')
+
+||| Combine one or two characters into a list
 abbreviation : Char -> Maybe Char -> List Char
 abbreviation abbrev1 abbrev2 = case abbrev2 of
     Nothing => [abbrev1]
     Just l  => abbrev1 :: [l]
 
-status : Maybe Char -> Promotion_status
-status pr = case pr of
-    Nothing => Not_yet_promoted
+status : Maybe Char -> Maybe Char -> Promotion_status
+status pr df = case pr of
+    Nothing => case df of
+      Nothing => Not_yet_promoted
+      Just _ => Declined_to_promote
     Just _  => No_promotion
 
 ||| Produce a piece from it's Forsythe abbreviation
 parse_abbreviation : Parser (List Square)
 parse_abbreviation = do
   pr <- parse_promoted
+  df <-parse_deferred
   abbrev1 <- letter
   abbrev2 <- opt letter
-  let abbrev = abbreviation abbrev1 abbrev2
+  let abbrev = (abbreviation abbrev1 abbrev2)
   let abbrev' = case pr of
     Nothing => pack abbrev
     Just p  => pack $ p :: abbrev
   case piece_from_abbreviation abbrev' of
     Nothing => fail "Not a piece abbreviation"
-    Just p  => pure $ [Just (Make_piece p (col abbrev1), status pr)]
+    Just p  => case (pr, df) of
+      (Just _, Just _) => fail "cannot both promote and defer promotion"
+      _                => pure $ [Just (Make_piece p (col abbrev1), status pr df)]
 
 
 count : Parser Nat
@@ -105,8 +114,12 @@ to_vectors lists =
 abstract from_forsythe : (for : String) -> Maybe Board
 from_forsythe for = case parse (parse_ranks) for of
   Left _ => Nothing
-  Right lists => to_vectors lists
-  
+  Right lists => case lists of
+        []       => Nothing
+        [] :: xs => case init' xs of
+          Nothing => Nothing
+          Just ys => to_vectors ys
+        _        => Nothing
     
 
     

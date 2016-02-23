@@ -28,7 +28,13 @@ import Direction
 public data Promotion_status = Not_yet_promoted
   | No_promotion
   | Declined_to_promote
-  
+
+Eq Promotion_status where
+  Not_yet_promoted == Not_yet_promoted = True
+  No_promotion == No_promotion = True
+  Declined_to_promote == Declined_to_promote = True
+  _ == _ = False
+
 ||| Designation of a player and owner of pieces
 public data Piece_colour =
   ||| First player in even games
@@ -317,11 +323,11 @@ canonical_abbreviation_map =
               ("+C", "+C"),
               ("+B", "+B"),
               ("FL", "FL"),
-              ("Ph", "Ph"),
-              ("Ky", "Ky"),
+              ("PH", "Ph"),
+              ("KY", "Ky"),
               ("FK", "FK"),
-              ("+Ph", "+Ph"),
-              ("+Ky", "+Ky"),
+              ("+PH", "+Ph"),
+              ("+KY", "+Ky"),
               ("BT", "BT"),
               ("+BT", "+BT"),
               ("+VM", "+VM"),
