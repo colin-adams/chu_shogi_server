@@ -21,12 +21,16 @@ module Game_state
 
 import Data.Fin
 import Data.Vect
+import Data.AVL.Dict
 import Board
 import Move_state
 import Stack
 import Move
 import Piece
 import Coordinate
+import Forsythe_parser
+import Effect.File
+import Effects
 
 %default total
 %access private
@@ -72,13 +76,38 @@ public data Game_state =
   Running Board Move_state King_count Move_stack | 
   Not_running Termination_reason
 
-||| Concrete state for a game
-abstract data Chu_game : Game_state -> Type
-
+||| New game prior to determination of handicap
+abstract new_game_state : Game_state
+new_game_state = Not_running Not_yet_started
 
 ||| Winning conditions criteria from board
 king_count_from_board : Board -> King_count
 king_count_from_board b = Make_king_count (white_king_count b) (black_king_count b) (non_king_count b)
+
+||| Initial game state after handicap decided
+|||
+||| @file_name - name of Forsythe file for handicap set-up
+partial abstract initial_game_state : (file_name : String) -> Eff (Either String Game_state) [FILE_IO ()]
+initial_game_state file_name = do
+  ei <- Effect.File.Default.readFile file_name
+  case ei of
+    Left e  => pure $ Left $ "Could not read " ++ file_name
+    Right c => case from_forsythe c of
+      Nothing => pure $ Left $ "failed to parse contents of " ++ file_name ++ " as Forsythe notation"
+      Just b  => do
+        let blk_to_move  = isInfixOf "EVEN" file_name
+        let moves_played = if blk_to_move then Z else 1
+        let posn         = insert (forsythe b) 1 empty
+        let wht_posns    = if blk_to_move then empty else posn
+        let blk_posns    = if blk_to_move then posn else empty
+        let kc           = king_count_from_board b -- TODO really we ought to have two different boards. The even start and the particular handicap start
+        let mv_state     = Make_move_state True 0 False empty empty
+        let mv_state'    = Make_move_state blk_to_move moves_played False wht_posns blk_posns
+        let stk          = pushS (b, mv_state, kc, Nothing, mkStack) mkStack
+        pure $ Right $ Running b mv_state' kc stk
+     
+||| Concrete state for a game
+abstract data Chu_game : Game_state -> Type
 
 ||| New state from passing by @p on @c1 using empty square @c2 on @bd in @mv_st with @kc and @stk
 |||

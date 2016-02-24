@@ -65,6 +65,7 @@ Show Move where
                                                    True  => "+"
                                                    False => case dec of
                                                                  True  => "="
+                                                                 False => ""
                                         in (abbreviation $ piece_type p) ++ " " ++ (show c1) ++ " - " ++ (show c2) ++ ind
   show (Double_move p c1 p2 c2 p3 c3) = let sep = case p3 of
                                                        Nothing => " - "

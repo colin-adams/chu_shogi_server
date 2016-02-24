@@ -35,7 +35,7 @@ Eq Coordinate where
 
 ||| Standard TSA coordinate notation 
 Show Coordinate where
-  show (Make_coordinate rank file) = (show $ chr ((toIntNat (finToNat rank)) + ord 'a')) ++ (show $ finToNat file)
+  show (Make_coordinate rank file) = (singleton $ chr ((toIntNat (finToNat rank)) + ord 'a')) ++ (show $ (finToNat file) + 1)
 
 ||| Absolute difference between rank @source to rank @distant
 rank_difference : (source : Coordinate) -> (distant : Coordinate) -> Nat

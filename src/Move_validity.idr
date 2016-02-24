@@ -282,7 +282,7 @@ is_repetition b st pos = case st of
 ||| Is @m valid for @state?
 |||
 ||| A reason is given why validity fails
-is_valid_move : (m : Move) -> (state : Game_state) -> (Bool, String)
+abstract is_valid_move : (m : Move) -> (state : Game_state) -> (Bool, String)
 is_valid_move m st = case is_valid_move_stage_2 m st of
   (False, v) => (False, v)
   _          => case st of
