@@ -14,32 +14,28 @@
 --  You should have received a copy of the GNU General Public License
 --  along with chu-shogi.  If not, see <http://www.gnu.org/licenses/>.
 
-||| Tests of ../Forsythe_parser.idr
-module Test.Forsythe_parser
+||| Tests of ../Csg_parser.idr
+module Test.Csg_parser
 
-import Forsythe_parser
+import Csg_parser
 import Effect.File
 import Effect.StdIO
 import Effects
-import Board
-import Data.Vect
-import Piece
+import Game_state
 
 %access private
 
-start_position_test : String -> Eff () [FILE_IO (), STDIO]
-start_position_test file_name = 
+historical_game_1_test : String -> Eff () [FILE_IO (), STDIO]
+historical_game_1_test file_name = 
   do
-    ei <- Effect.File.Default.readFile file_name
+    ei <- parse_csg file_name
     case ei of
-      Left e  => putStrLn $ "Failed to read or open " ++ file_name 
-      Right c => case from_forsythe c of
-        Left e  => putStrLn $ "Failed: " ++ e
-        Right b => putStrLn "Passed"
-
+      Left e  => putStrLn $ "Failed: " ++ e
+      Right g => putStrLn "Passed"
+      
 ||| Test setting up a correct initial position from a .fsy file
-abstract test_start_position : IO ()
-test_start_position = run (start_position_test "../files/EVEN.fsy")
+abstract test_historical_game_1 : IO ()
+test_historical_game_1 = run (historical_game_1_test "../files/hist1.csg")
 
 
   

@@ -15,7 +15,7 @@
 --  You should have received a copy of the GNU General Public License
 --  along with chu-shogi.  If not, see <http://www.gnu.org/licenses/>.
 
-||| Inverse of Board.forsythe - this parses George Hodges' Forsythe notation for Chu Shogi, with the addition of a prefix = to indicate deferred promotion
+||| Parser for format-3 .csg files (as produced by Chu_shogi 2.10 (?) by Colin Adams) 
 module Forsythe_parser
 
 import Lightyear
@@ -23,10 +23,29 @@ import Lightyear.Strings
 import Lightyear.Char
 import Board
 import Piece
+import Game_state
+import Effect.File
+import Effects
 
 %default total
 %access private
 
+||| Parse a String (the contents of a .csg file) yielding a Game_state or an error string
+from_csg : Parser Game_state
+from_csg = fail "TODO"
+
+||| Re-construct the state of the game at the end of a Format-3 .csg file
+|||
+||| @file_name - absolute or relative file-system path to .csg file e.g. /home/colin/Downlads/hist.csg 
+partial abstract parse_csg : (file_name : String) -> Eff (Either String Game_state) [FILE_IO ()]
+parse_csg file_name = do
+  ei <- Effect.File.Default.readFile file_name
+  case ei of
+    Left e  => pure $ Left e
+    Right c => pure $ parse from_csg c
+
+
+{- Forsythe_parse code follows for example usage
 col : Char -> Piece_colour
 col c = case isUpper c of
   True  => White
@@ -111,18 +130,16 @@ to_vectors lists =
 ||| Construct a Board corresponding to @forsythe (if valid)
 |||
 ||| @for - textual representation of a position, as produced by Board.forsythe
-abstract from_forsythe : (for : String) -> Either String Board
+abstract from_forsythe : (for : String) -> Maybe Board
 from_forsythe for = case parse (parse_ranks) for of
-  Left e      => Left e
+  Left _ => Nothing
   Right lists => case lists of
-        []       => Left "No ranks"
+        []       => Nothing
         [] :: xs => case init' xs of
-          Nothing => Left "No ranks"
-          Just ys => case to_vectors ys of
-            Nothing => Left "Strange board geometry"
-            Just b  => Right b
-        _        => Left "Missing leading / (?)"
+          Nothing => Nothing
+          Just ys => to_vectors ys
+        _        => Nothing
     
-
+-}
     
  

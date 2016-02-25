@@ -93,8 +93,8 @@ initial_game_state file_name = do
   case ei of
     Left e  => pure $ Left $ "Could not read " ++ file_name
     Right c => case from_forsythe c of
-      Nothing => pure $ Left $ "failed to parse contents of " ++ file_name ++ " as Forsythe notation"
-      Just b  => do
+      Left e => pure $ Left $ "failed to parse contents of " ++ file_name ++ " as Forsythe notation: " ++ e
+      Right b  => do
         let blk_to_move  = isInfixOf "EVEN" file_name
         let moves_played = if blk_to_move then Z else 1
         let posn         = insert (forsythe b) 1 empty
