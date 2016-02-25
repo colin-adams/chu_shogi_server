@@ -20,6 +20,8 @@
 module Board
 
 import Data.Matrix
+import Data.Fin
+import Data.Vect
 import Piece
 import Direction
 import Coordinate
@@ -235,7 +237,7 @@ check_promotion c1 c2 b pr dec capt = case piece_at c1 b of
 ||| @destination - the square which the piece wants to jump to
 ||| We also return a validity message
 abstract can_jump_to : (piece : Piece) -> (source : Coordinate) -> (board : Board) -> (destination : Coordinate) -> (Bool, String)
-can_jump_to p c1 b c2 = case direction_and_range (piece_colour p) c1 c2 of
+can_jump_to p c1 b c2 = case direction_and_range c1 c2 of
   Nothing     => (False, "Starting and ending squares are not in in orthogonal or diagonal arrangement")
   Just (d, r) => case r == 2 of
     False => (False, "Jumping is only allowed at a range of two")
@@ -254,7 +256,7 @@ can_jump_to p c1 b c2 = case direction_and_range (piece_colour p) c1 c2 of
 can_reach_from : (target : Coordinate) -> (source : Coordinate) -> (board : Board) -> (direction : Direction) -> (moves : Nat) ->
  (colour : Piece_colour) -> (message :String) -> (Bool, String)
 can_reach_from c2 c1 b d n col message = case next_square c1 d of
-  Nothing => (False, message ++ ", No additional square on the board in that direction")
+  Nothing => (False, message ++ ", No additional square on the board in direction " ++ (show d))
   Just c' => case piece_at c' b of
     Nothing => case c' == c2 of
       True => (True, "")
@@ -276,12 +278,14 @@ can_reach_from c2 c1 b d n col message = case next_square c1 d of
 ||| @message - validity message to append to
 ||| We also return a validity message appended to @message
 abstract can_range_to : (piece : Piece) -> (source : Coordinate) -> (board : Board) -> (message : String) -> (destination : Coordinate) -> (Bool, String)
-can_range_to p c1 b message c2 = case direction_and_range (piece_colour p) c1 c2 of
+can_range_to p c1 b message c2 = case direction_and_range c1 c2 of
   Nothing     => (False, message ++ ", Destination is not on an orthogonal or diagonal direction")
   Just (d, r) => case r > 0 of
     False => (False, message ++ ", Zero range")
-    True  => case range (piece_type p) d of
-      Z   => (False, message ++ ", Piece has zero range in that direction")
+    True  => let col = piece_colour p
+                 d'  = if col == Black then opposite_direction d else d
+             in case range (piece_type p) d' of
+      Z   => (False, message ++ ", Piece has zero range in direction " ++ (show d'))
       S n => can_reach_from c2 c1 b d n (piece_colour p) message
       
 ||| Does non-lion @piece have lion moves in @direction?
@@ -293,10 +297,10 @@ has_lion_moves p d = case p of
                           Soaring_eagle => case d of
                             North_east => (True, "")
                             North_west => (True, "")
-                            _          => (False, "Soaring Eagle does not have lion power in this direction")
+                            _          => (False, "Soaring Eagle does not have lion power in direction " ++ (show d))
                           Horned_falcon => case d of
                             North => (True, "")
-                            _     => (False, "Horned Falcon does not have lion power in this direction")
+                            _     => (False, "Horned Falcon does not have lion power in direction " ++ (show d))
 
                           _             => (False, "Only Soaring eagles and Horned falcons have directional lion power")
 
@@ -346,9 +350,10 @@ protects c b o = case o of
         False => False
         True  => case is_lion (piece_type p) of
           True  => True
-          False => case direction_and_range (piece_colour p) c' c of
+          False => case direction_and_range c' c of
             Nothing     => False
-            Just (d, _) => fst $ has_lion_moves (piece_type p) d
+            Just (d, _) => let d' = if piece_colour p == Black then opposite_direction d else d
+                           in fst $ has_lion_moves (piece_type p) d'
         
 ||| Is a piece of @colour in @location on @board protected?
 |||
@@ -440,3 +445,46 @@ non_king_count b = let ocl = pieces b
                        Nothing => FZ -- this would be a bug
                        Just c  => c                       
 
+display_square : Square -> String
+display_square sq = case sq of
+  Nothing => "   |"
+  Just _  => (substr 0 3 ((forsythe_cell sq) ++ "  ")) ++ "|"
+
+display_rank : Nat -> Board -> String
+display_rank rnk bd = let r = natToFin rnk 12
+                      in case r of
+                        Nothing => ""
+                        Just r' => let rank = index r' bd
+                                       rk   = chr ((toIntNat rnk) + (ord 'a'))
+                                   in (singleton rk) ++ " |" ++ (concatMap display_square rank) ++ "\n"
+
+||| Ascii graphics display of a Board
+|||
+||| We display from Black's point of view, simply because it is easier to do. This is just a debugging aid
+abstract display_board : Board -> String
+display_board bd = "    12  11  10  9   8   7   6   5   4   3   2   1\n" ++
+                   "  +---+---+---+---+---+---+---+---+---+---+---+---+\n" ++
+                   (display_rank 0 bd) ++ 
+                   "  +---+---+---+---+---+---+---+---+---+---+---+---+\n" ++
+                   (display_rank 1 bd) ++                  
+                   "  +---+---+---+---+---+---+---+---+---+---+---+---+\n" ++
+                   (display_rank 2 bd) ++
+                   "  +---+---+---+---+---+---+---+---+---+---+---+---+\n" ++
+                   (display_rank 3 bd) ++
+                   "  +---+---+---+---+---+---+---+---+---+---+---+---+\n" ++                   
+                   (display_rank 4 bd) ++
+                   "  +---+---+---+---+---+---+---+---+---+---+---+---+\n" ++                   
+                   (display_rank 5 bd) ++
+                   "  +---+---+---+---+---+---+---+---+---+---+---+---+\n" ++                   
+                   (display_rank 6 bd) ++
+                   "  +---+---+---+---+---+---+---+---+---+---+---+---+\n" ++                   
+                   (display_rank 7 bd) ++
+                   "  +---+---+---+---+---+---+---+---+---+---+---+---+\n" ++                   
+                   (display_rank 8 bd) ++
+                   "  +---+---+---+---+---+---+---+---+---+---+---+---+\n" ++                   
+                   (display_rank 9 bd) ++
+                   "  +---+---+---+---+---+---+---+---+---+---+---+---+\n" ++                   
+                   (display_rank 10 bd) ++
+                   "  +---+---+---+---+---+---+---+---+---+---+---+---+\n" ++                   
+                   (display_rank 11 bd) ++                                                                                                                                                                                              
+                   "  +---+---+---+---+---+---+---+---+---+---+---+---+\n"                   

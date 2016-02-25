@@ -44,9 +44,9 @@ test_moves_from_start = do
       case is_valid_move bad_move_1 gs of
         (True, _)  => putStrLn $ "Invalid move " ++ (show bad_move_1) ++ " was flagged as valid"
         (False, _) => do
-          let good_move_1 = Simple_move (Make_piece Pawn Black) (Make_coordinate (fromInteger 8) (fromInteger 3)) (Make_coordinate (fromInteger 7) (fromInteger 3)) False False
+          let good_move_1 = Simple_move (Make_piece Pawn Black) (Make_coordinate (fromInteger 8) (fromInteger 4)) (Make_coordinate (fromInteger 7) (fromInteger 4)) False False
           case is_valid_move good_move_1 gs of
-            (False, err)  => putStrLn $ "Good move " ++ (show good_move_1) ++ " was flagged as invalid for " ++ err
+            (False, err)  => putStrLn $ "Good move " ++ (show good_move_1) ++ " was flagged as invalid for " ++ err ++ "\n" ++ (display_board b)
             (True, _) => putStrLn "Passed"
   
 

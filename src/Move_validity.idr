@@ -48,9 +48,9 @@ is_same_piece_at p c b = case piece_at c b of
 is_valid_lion_double_move_stage_1 : Coordinate -> Piece -> Coordinate -> Maybe Piece -> Coordinate -> (Bool, String)
 is_valid_lion_double_move_stage_1 c1 p2 c2 p3 c3 = let col = opposite_colour (piece_colour p2) 
   in
-    case (direction_and_range col c1 c2) of
+    case (direction_and_range c1 c2) of
       Just (d, r) => if r == 1 then
-        case (direction_and_range col c2 c3) of
+        case (direction_and_range c2 c3) of
           Just (d', r') => if r' == 1 then
                if opposite_direction d == d' then
                	  (False, "Igui distinct from other double moves")
@@ -74,11 +74,12 @@ is_valid_lion_double_move_stage_1 c1 p2 c2 p3 c3 = let col = opposite_colour (pi
 is_valid_soaring_eagle_double_move_stage_1 : Coordinate -> Piece -> Coordinate -> Maybe Piece -> Coordinate -> (Bool, String)
 is_valid_soaring_eagle_double_move_stage_1 c1 p2 c2 p3 c3 = 
   let col = opposite_colour (piece_colour p2) 
-  in case (direction_and_range col c1 c2) of
-    Just (dir1, r1) => case (direction_and_range col c2 c3) of
+  in case (direction_and_range c1 c2) of
+    Just (dir1, r1) => case (direction_and_range c2 c3) of
       Just (dir2, r2) =>
         if r1 == 1 && r2 == 1 && dir1 == dir2 then
-          if dir1 == North_east || dir1 == North_west then
+          let dir' = if col == Black then opposite_direction dir1 else dir1
+          in if dir' == North_east || dir' == North_west then
             case p3 of
               Nothing  => (True, "")
               Just p3' => 
@@ -101,11 +102,12 @@ is_valid_soaring_eagle_double_move_stage_1 c1 p2 c2 p3 c3 =
 is_valid_horned_falcon_double_move_stage_1 : Coordinate -> Piece -> Coordinate -> Maybe Piece -> Coordinate -> (Bool, String)
 is_valid_horned_falcon_double_move_stage_1 c1 p2 c2 p3 c3 = 
   let col = opposite_colour (piece_colour p2) 
-  in case (direction_and_range col c1 c2) of
-    Just (dir1, r1) => case (direction_and_range col c2 c3) of
+  in case (direction_and_range c1 c2) of
+    Just (dir1, r1) => case (direction_and_range c2 c3) of
       Just (dir2, r2) =>
         if r1 == 1 && r2 == 1 && dir1 == dir2 then
-          if dir1 == North then
+          let dir' = if col == Black then opposite_direction dir1 else dir1
+          in if dir' == North then
             case p3 of
               Nothing  => (True, "")
               Just p3' => 
@@ -160,7 +162,10 @@ is_valid_move_stage_1 m (Running b _ _ _) = case m of
      Just _  => (False, "Can't make a non-capturing move to an occupied square")
      Nothing => case can_jump_to p c1 b c2 of
        (True, _)  => check_promotion c1 c2 b pr dec False 
-       (False, v) => can_range_to p c1 b v c2
+       (False, v) => case can_range_to p c1 b v c2 of
+         (True, _)  => check_promotion c1 c2 b pr dec False
+         (False, v') => (False, v')
+  
   Capture p c1 p2 c2 pr dec    =>  case is_same_piece_at p c1 b of
    False => (False, "Selected piece is not piece on starting square")
    True => case piece_at c2 b of
@@ -168,9 +173,11 @@ is_valid_move_stage_1 m (Running b _ _ _) = case m of
      Just (p', _) => case (piece_colour p) == (piece_colour p') of
        True  => (False, "Can't capture piece of same colour")
        False => case can_jump_to p c1 b c2 of
-         (True, _)  => check_promotion c1 c2 b pr dec False 
-         (False, v) => can_range_to p c1 b v c2
-
+         (True, _)  => check_promotion c1 c2 b pr dec True
+         (False, v) => case can_range_to p c1 b v c2 of
+           (True, _)  => check_promotion c1 c2 b pr dec True
+           (False, v') => (False, v')
+   
 ||| Is @m valid for @state, ignoring repetition_rule?
 |||
 ||| True if the move is basically valid and lion capture rules are honoured
@@ -220,7 +227,7 @@ is_valid_move_stage_2 m st = case is_valid_move_stage_1 m st of
               False => (True, "Okazaki")
         True  => case is_lion (piece_type p2) of -- moving lion
           False => (True, "")
-          True  => case direction_and_range (piece_colour p) c1 c2 of
+          True  => case direction_and_range c1 c2 of
             Nothing => (False, "Impossible. Valid stage1 but no move to destination")
             Just (_, d) => 
               if d == 1 then
@@ -265,8 +272,8 @@ is_repetition b st pos = case st of
         in case lookup pos positions of
           Nothing => False
           Just n  => case n < 3 of
-            False => False -- If you haven't seen this position 3 times before, then it is legal to repeat
-            True => case n >= 4 of
+            True  => False -- If you haven't seen this position 3 times before, then it is legal to repeat
+            False => case n >= 4 of
               True  => True -- can never make a fifth repetition
               False => let black_attacks = attack_count b Black st
                            white_attacks = attack_count b White st

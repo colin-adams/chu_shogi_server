@@ -83,59 +83,42 @@ path_to c1 c2 = let r  = toIntegerNat $ finToNat $ rank c1
 ||| Direction and range for piece-colour from @source to @destination
 |||
 ||| If not one of the principal 8 directions we return Nothing
-abstract direction_and_range : Piece_colour-> (source : Coordinate) -> (destination : Coordinate) -> Maybe (Direction, Nat)
-direction_and_range col c1 c2 = let (y, x) = path_to c1 c2 in
+abstract direction_and_range : (source : Coordinate) -> (destination : Coordinate) -> Maybe (Direction, Nat)
+direction_and_range c1 c2 = let (y, x) = path_to c1 c2 in
                                   case compare x 0 of
                                     GT => if y == 0 then
-                                             case col of
-                                               White => Just (West, fromInteger x)
-                                               Black => Just (East, fromInteger x)
+                                             Just (West, fromInteger x)
                                           else
                                             if x == y then
-                                              case col of
-                                                White => Just (North_east, fromInteger x)
-                                                Black => Just (South_west, fromInteger x)
+                                                Just (North_east, fromInteger x)
                                             else
                                               if x == -y then
-                                                case col of
-                                                  White => Just (South_east, fromInteger x)
-                                                  Black => Just (North_west, fromInteger x)         
+                                                Just (South_east, fromInteger x)
                                               else
                                                 Nothing
                                     LT => if y == 0 then
-                                             case col of
-                                               White => Just (West, fromInteger (-x))
-                                               Black => Just (East, fromInteger (-x))
+                                               Just (West, fromInteger (-x))
                                           else
                                             if x == y then
-                                              case col of
-                                                Black => Just (North_east, fromInteger (-x))
-                                                White => Just (South_west, fromInteger (-x))
+                                                Just (South_west, fromInteger (-x))
                                             else
                                               if x == (-y) then
-                                                case col of
-                                                  Black => Just (South_east, fromInteger y)
-                                                  White => Just (North_west, fromInteger y)         
+                                                  Just (North_west, fromInteger y)         
                                               else
                                                 Nothing
                                     EQ => if y == 0 then
                                              Nothing
                                           else
                                             if y > 0 then
-                                              case col of
-                                                White => Just (North, fromInteger y)
-                                                Black => Just (South, fromInteger y)
+                                                Just (North, fromInteger y)
                                             else
-                                              case col of
-                                                Black => Just (North, fromInteger (-y))
-                                                White => Just (South, fromInteger (-y))
+                                                Just (South, fromInteger (-y))
                                                                              
 ||| Direction for a white piece from @source to @destination
 |||
-||| If @piece is actually black, then the reverse direction will be returned
 ||| If not one of the principal 8 directions we return Nothing
 abstract direction_to : Piece -> (source : Coordinate) -> (destination : Coordinate) -> Maybe Direction
-direction_to p c1 c2 = case direction_and_range (piece_colour p) c1 c2 of
+direction_to p c1 c2 = case direction_and_range c1 c2 of
                          Nothing => Nothing
                          Just (d, _) => Just d
  
@@ -195,3 +178,4 @@ next_square c d = case d of
                                  S n => case natToFin n 12 of             
                                    Nothing => Nothing
                                    Just f' => Just (Make_coordinate r' f')   
+ 

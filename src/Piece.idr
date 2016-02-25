@@ -381,9 +381,9 @@ is_northerly dir =
       North_west => True
       _ => False
 
-||| Distance @ piece  can move in a southerly direction on an open board
-southern_range : Piece_type -> Nat
-southern_range piece = if elem piece  [Lance, Reverse_chariot, Vertical_mover, White_horse,
+||| Distance @ piece (if White) can move in a northerly direction on an open board
+northern_range : Piece_type -> Nat
+northern_range piece = if elem piece  [Lance, Reverse_chariot, Vertical_mover, White_horse,
                                Rook, Promoted_rook, Promoted_gold_general, Promoted_silver_general,
                                Free_king, Promoted_phoenix, Flying_stag, Flying_ox,
                                Whale, Dragon_king, Soaring_eagle] then
@@ -393,9 +393,9 @@ southern_range piece = if elem piece  [Lance, Reverse_chariot, Vertical_mover, W
                          0
                       else 1
     
-||| Distance @ piece  can move in a northerly direction on an open board
-northern_range : Piece_type -> Nat
-northern_range piece = if elem piece [Reverse_chariot, Vertical_mover, White_horse, Rook,
+||| Distance @ piece (if White) can move in a southerly direction on an open board
+southern_range : Piece_type -> Nat
+southern_range piece = if elem piece [Reverse_chariot, Vertical_mover, White_horse, Rook,
                                Promoted_rook, Promoted_gold_general, Promoted_silver_general,
                                Free_king, Promoted_phoenix, Flying_stag, Flying_ox, Whale,
                                Dragon_king, Horned_falcon, Soaring_eagle] then

@@ -42,7 +42,16 @@ Eq Direction where
   North_west == North_west = True
   _ == _ = False
 
- 
+Show Direction where
+  show North = "N"
+  show South = "S"
+  show East = "E"
+  show West = "W"
+  show North_east = "NE"
+  show North_west = "NW"
+  show South_east = "SE"
+  show South_west = "SW"
+    
 ||| Reverse direction 
 abstract opposite_direction : Direction -> Direction
 opposite_direction d = case d of
