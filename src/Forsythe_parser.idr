@@ -25,7 +25,6 @@ import Board
 import Piece
 
 %default total
-%access private
 
 col : Char -> Piece_colour
 col c = case isUpper c of
@@ -87,7 +86,7 @@ piece_or_squares = do
 parse_rank : Parser (List Square)
 parse_rank = do
   lists <- assert_total (sepBy piece_or_squares (char ',')) -- Hmmm. TODO
-  pure $ flatten lists
+  pure $ join lists
 
 parse_ranks : Parser (List (List Square))
 parse_ranks = do
@@ -111,7 +110,7 @@ to_vectors lists =
 ||| Construct a Board corresponding to @forsythe (if valid)
 |||
 ||| @for - textual representation of a position, as produced by Board.forsythe
-abstract from_forsythe : (for : String) -> Either String Board
+export from_forsythe : (for : String) -> Either String Board
 from_forsythe for = case parse (parse_ranks) for of
   Left e      => Left e
   Right lists => case lists of

@@ -33,10 +33,9 @@ import Effect.File
 import Effects
 
 %default total
-%access private
 
 ||| Data for calculating winning condition
-public record King_count where
+public export record King_count where
   constructor Make_king_count
   ||| white_kings = FZ --> White has lost. Ditto for Black
   white_kings, black_kings : Fin 3
@@ -64,30 +63,30 @@ finished kc = case white_kings kc of
 ||| previous victory conditions
 ||| previous move (Nothing is the oldest entry - the starting position)
 ||| future moves (for take-back handling)
-Move_stack : Type
+public export Move_stack : Type
 Move_stack = Stack (Board, Move_state, King_count, (Maybe Move), (Stack Move))
 
 
 ||| Why is the game not running?
-public data Termination_reason = Not_yet_started | Black_won | White_won | Draw
+public export data Termination_reason = Not_yet_started | Black_won | White_won | Draw
 
 ||| The top-level state of the game. 
-public data Game_state = 
+public export data Game_state = 
   Running Board Move_state King_count Move_stack | 
   Not_running Termination_reason
 
 ||| New game prior to determination of handicap
-abstract new_game_state : Game_state
+export new_game_state : Game_state
 new_game_state = Not_running Not_yet_started
 
 ||| Winning conditions criteria from board
-king_count_from_board : Board -> King_count
+export king_count_from_board : Board -> King_count
 king_count_from_board b = Make_king_count (white_king_count b) (black_king_count b) (non_king_count b)
 
 ||| Initial game state after handicap decided
 |||
 ||| @file_name - name of Forsythe file for handicap set-up
-partial abstract initial_game_state : (file_name : String) -> Eff (Either String Game_state) [FILE_IO ()]
+partial export initial_game_state : (file_name : String) -> Eff (Either String Game_state) [FILE_IO ()]
 initial_game_state file_name = do
   ei <- Effect.File.Default.readFile file_name
   case ei of
@@ -107,7 +106,7 @@ initial_game_state file_name = do
         pure $ Right $ Running b mv_state' kc stk
      
 ||| Concrete state for a game
-abstract data Chu_game : Game_state -> Type
+export data Chu_game : Game_state -> Type
 
 ||| New state from passing by @p on @c1 using empty square @c2 on @bd in @mv_st with @kc and @stk
 |||
@@ -259,7 +258,7 @@ new_move_state mv bd mv_st kc stk = let (bd', mv_st', kc', stk') = updated_state
 ||| @move - the move to apply.
 ||| @board - the position to be updated
 ||| @state - the existing state of the game
-abstract updated_by_move : (move : Move) -> (board : Board) -> (state : Game_state) -> (Board, Game_state)
+export updated_by_move : (move : Move) -> (board : Board) -> (state : Game_state) -> (Board, Game_state)
 updated_by_move m b st = case st of
   Not_running r => case r of
     Not_yet_started => let mv_st = initial_move_state

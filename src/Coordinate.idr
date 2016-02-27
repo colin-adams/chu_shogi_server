@@ -23,18 +23,17 @@ import Piece
 import Direction
 
 %default total
-%access private
 
 ||| Board coordinates
-public record Coordinate where
+public export record Coordinate where
   constructor Make_coordinate 
   rank, file: Fin 12
 
-Eq Coordinate where
+public export Eq Coordinate where
   (Make_coordinate r f) == (Make_coordinate r' f') = r == r' && f == f'
 
-||| Standard TSA coordinate notation 
-Show Coordinate where
+-- Standard TSA coordinate notation 
+public export Show Coordinate where
   show (Make_coordinate rank file) = (singleton $ chr ((toIntNat (finToNat rank)) + ord 'a')) ++ (show $ (finToNat file) + 1)
 
 ||| Absolute difference between rank @source to rank @distant
@@ -52,7 +51,7 @@ file_difference c1 c2 = let r1 = toIntegerNat . finToNat $ file c1
 ||| Absolute distance from @source to @destination
 |||
 ||| Metric is (forget the name - look it up in a topology primer)
-abstract distance_between : Coordinate -> Coordinate -> Nat
+export distance_between : Coordinate -> Coordinate -> Nat
 distance_between c1 c2 = let r = rank_difference c1 c2
                              f = file_difference c1 c2
                          in maximum r f
@@ -60,7 +59,7 @@ distance_between c1 c2 = let r = rank_difference c1 c2
 ||| Distance from @source to @destination in a prinicpal direction
 |||
 ||| Only non-zero if a straight line connects the two squares in one of the eight principal directions
-abstract distance_to : Coordinate -> Coordinate -> Nat
+export distance_to : Coordinate -> Coordinate -> Nat
 distance_to c1 c2 = let r = rank_difference c1 c2
                         f = file_difference c1 c2
                     in case r of
@@ -83,7 +82,7 @@ path_to c1 c2 = let r  = toIntegerNat $ finToNat $ rank c1
 ||| Direction and range for piece-colour from @source to @destination
 |||
 ||| If not one of the principal 8 directions we return Nothing
-abstract direction_and_range : (source : Coordinate) -> (destination : Coordinate) -> Maybe (Direction, Nat)
+export direction_and_range : (source : Coordinate) -> (destination : Coordinate) -> Maybe (Direction, Nat)
 direction_and_range c1 c2 = let (y, x) = path_to c1 c2 in
                                   case compare x 0 of
                                     GT => if y == 0 then
@@ -117,7 +116,7 @@ direction_and_range c1 c2 = let (y, x) = path_to c1 c2 in
 ||| Direction for a white piece from @source to @destination
 |||
 ||| If not one of the principal 8 directions we return Nothing
-abstract direction_to : Piece -> (source : Coordinate) -> (destination : Coordinate) -> Maybe Direction
+export direction_to : Piece -> (source : Coordinate) -> (destination : Coordinate) -> Maybe Direction
 direction_to p c1 c2 = case direction_and_range c1 c2 of
                          Nothing => Nothing
                          Just (d, _) => Just d
@@ -126,7 +125,7 @@ direction_to p c1 c2 = case direction_and_range c1 c2 of
 |||
 ||| @source - Square where we are currently located
 ||| @direction - Direction in which we are moving
-abstract next_square : (source : Coordinate) -> (direction : Direction) -> Maybe Coordinate
+export next_square : (source : Coordinate) -> (direction : Direction) -> Maybe Coordinate
 next_square c d = case d of
   North => case natToFin (finToNat (rank c) + 1) 12 of
     Nothing => Nothing

@@ -16,7 +16,7 @@
 --  along with chu-shogi.  If not, see <http://www.gnu.org/licenses/>.
 
 ||| Parser for format-3 .csg files (as produced by Chu_shogi 2.10 (?) by Colin Adams) 
-module Forsythe_parser
+module Csg_parser
 
 import Lightyear
 import Lightyear.Strings
@@ -26,23 +26,73 @@ import Piece
 import Game_state
 import Effect.File
 import Effects
+import Data.AVL.Dict
 
-%default total
-%access private
+parse_format : Parser Int
+parse_format = do
+  fmt <- integer
+  nl  <- endOfLine
+  pure $ fmt
 
+parse_single_string : Parser String
+parse_single_string = do
+  name  <-many letter
+  nl    <- endOfLine
+  pure $ pack name
+
+parse_name : Parser String
+parse_name = do
+  name  <- many (noneOf "\n")
+  nl    <- endOfLine
+  pure $ pack name
+
+parse_handicap : Parser String
+parse_handicap = do
+  board <- many letter
+  sep   <- dot
+  dat   <- many letter
+  nl    <- endOfLine
+  parse_single_string
+ 
 ||| Parse a String (the contents of a .csg file) yielding a Game_state or an error string
-from_csg : Parser Game_state
-from_csg = fail "TODO"
+from_csg : (handicaps : Dict String Game_state) -> Parser Game_state
+from_csg handicaps = do
+  fmt <- parse_format
+  case fmt == 3 of
+    False => fail "Bad format - only format 3 is supported"
+    True  => do
+      hdcp <- parse_handicap
+      case lookup hdcp handicaps of
+        Nothing => fail $ "Bad handicap name: " ++ hdcp
+        Just gs => do
+          blk_nm <-parse_name
+          wht_nm <- parse_name 
+          skip parse_name  -- The next lines are some kind of comment facility I think - TODO need to check.
+          skip endOfLine
+          skip endOfLine
+          skip endOfLine
+          skip endOfLine
+          z <- char '0'  -- "Move zero" - an artifact of the implementation. We don't need this
+          skip parse_name
+          fail $ "TODO: parse moves"
+
+||| Re-construct the state of the game at the end of a Format-3 .csg file
+|||
+||| @contents - contents of a .csg file
+||| @handicaps - map of handicap names to initial game_states
+export parse_csg : (contents : String) -> (handicaps : Dict String Game_state) -> Either String Game_state
+parse_csg contents handicaps = parse (from_csg handicaps) contents
 
 ||| Re-construct the state of the game at the end of a Format-3 .csg file
 |||
 ||| @file_name - absolute or relative file-system path to .csg file e.g. /home/colin/Downlads/hist.csg 
-partial abstract parse_csg : (file_name : String) -> Eff (Either String Game_state) [FILE_IO ()]
-parse_csg file_name = do
+||| @handicaps - map of handicap names to initial game_states
+export parse_csg_file : (file_name : String) -> (handicaps : Dict String Game_state) -> Eff (Either String Game_state) [FILE_IO ()]
+parse_csg_file file_name handicaps = do
   ei <- Effect.File.Default.readFile file_name
   case ei of
     Left e  => pure $ Left e
-    Right c => pure $ parse from_csg c
+    Right c => pure $ parse_csg c handicaps
 
 
 {- Forsythe_parse code follows for example usage
@@ -130,7 +180,7 @@ to_vectors lists =
 ||| Construct a Board corresponding to @forsythe (if valid)
 |||
 ||| @for - textual representation of a position, as produced by Board.forsythe
-abstract from_forsythe : (for : String) -> Maybe Board
+export from_forsythe : (for : String) -> Maybe Board
 from_forsythe for = case parse (parse_ranks) for of
   Left _ => Nothing
   Right lists => case lists of

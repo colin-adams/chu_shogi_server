@@ -30,10 +30,8 @@ import Coordinate
 import Game_state
 import Move_state
 
-%access private
-
 ||| Test playing some moves from the initial start position
-abstract test_moves_from_start : IO ()
+export test_moves_from_start : IO ()
 test_moves_from_start = do
   ei_st <- run $ initial_game_state "../files/EVEN.fsy"
   case ei_st of

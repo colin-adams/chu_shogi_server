@@ -22,9 +22,8 @@ import Piece
 import Coordinate
 
 %default total
-%access private
 
-public data Move = 
+public export data Move = 
   ||| Double move by @origin to @empty-square then back to origin
   Pass Piece Coordinate Coordinate |
   ||| Capture by piece @origin of piece @target without moving
@@ -51,8 +50,8 @@ is_lion_capture m = case m of
       Nothing  => is_lion (piece_type p2)
       Just p3' => is_lion (piece_type p2) || is_lion (piece_type p3')
 
-||| Modified TSA notation for a move
-Show Move where
+-- Modified TSA notation for a move
+public export Show Move where
   show (Pass p c1 c2)                 = (abbreviation $ piece_type p) ++ " " ++ (show c1) ++ " !" ++ (show c2)
   show (Igui p c1 _ c2)               = (abbreviation $ piece_type p) ++ " " ++ (show c1) ++ " x!" ++ (show c2)
   show (Capture p c1 _ c2 pr dec)     = let ind = case pr of

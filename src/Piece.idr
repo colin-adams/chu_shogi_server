@@ -22,39 +22,38 @@ import Data.SortedMap
 import Direction
 
 %default total
-%access private
 
 ||| Can this piece promote without capturing?
-public data Promotion_status = Not_yet_promoted
+public export data Promotion_status = Not_yet_promoted
   | No_promotion
   | Declined_to_promote
 
-Eq Promotion_status where
+public export Eq Promotion_status where
   Not_yet_promoted == Not_yet_promoted = True
   No_promotion == No_promotion = True
   Declined_to_promote == Declined_to_promote = True
   _ == _ = False
 
 ||| Designation of a player and owner of pieces
-public data Piece_colour =
+public export data Piece_colour =
   ||| First player in even games
   Black |
   ||| Second player in even games (and technically in handicap games too - Black's first move is to take the handicap)
   White
 
-Eq Piece_colour where
+public export Eq Piece_colour where
   Black == Black = True
   White == White = True
   _ == _ = False
   
 ||| opposite colour to that of @colour
-abstract opposite_colour : Piece_colour -> Piece_colour
+export opposite_colour : Piece_colour -> Piece_colour
 opposite_colour c = case c of
                          Black => White
                          White => Black
 
 ||| Classification of piece (i.e. movement and capturing capabilites, and special status for kings)
-public data Piece_type = Lance
+public export data Piece_type = Lance
     | Reverse_chariot 
     | Side_mover
     | Vertical_mover
@@ -94,7 +93,7 @@ public data Piece_type = Lance
     | Promoted_pawn
     | Promoted_go_between;
     
-Eq Piece_type where
+public export Eq Piece_type where
    (==) p q = case p of
      Lance => case q of
        Lance => True
@@ -215,7 +214,7 @@ Eq Piece_type where
        _ => False
 
 ||| Standard TSA abbreviation
-abstract abbreviation : Piece_type -> String
+export abbreviation : Piece_type -> String
 abbreviation pc = case pc of
   Lance => "L"
   Reverse_chariot => "RC"
@@ -352,19 +351,19 @@ canononical_abbreviation abbrev = case lookup abbrev canonical_abbreviation_map 
 ||| Is @abbrev the case-insensitive abbreviation of a piece-type?
 |||
 ||| @abbrev - the abbreviation to test
-abstract is_abbrev : (abbrev : String) -> Bool
+export is_abbrev : (abbrev : String) -> Bool
 is_abbrev abbrev = let abbrevs = map (toLower . fst) (toList abbreviation_map)
                    in elem abbrev abbrevs
                    
 ||| Creates a Piece_type given it's standard TSA abbreviation
-abstract piece_from_abbreviation : String -> Maybe Piece_type 
+export piece_from_abbreviation : String -> Maybe Piece_type 
 piece_from_abbreviation abbrev = let abbrev'  = toUpper abbrev
                                      abbrev'' = canononical_abbreviation abbrev'
                                  in  lookup abbrev'' abbreviation_map
 
 
 ||| Is @ piece subject to the special rules for Lions?
-abstract is_lion : Piece_type -> Bool
+export is_lion : Piece_type -> Bool
 is_lion piece =
     case piece of
       Lion => True
@@ -455,7 +454,7 @@ diagonal_jump piece =
       _ => False
       
 ||| Number of squares @ piece is capable of moving on an empty board in @ direction
-abstract range : Piece_type -> Direction -> Nat
+export range : Piece_type -> Direction -> Nat
 range piece direction =
   case direction of
        South => southern_range piece
@@ -470,7 +469,7 @@ range piece direction =
 
 ||| Does @ piece have a two-space jumping capability towards @ direction?
 ||| We also return a validity message
-abstract jump : Piece_type -> Direction -> (Bool, String)
+export jump : Piece_type -> Direction -> (Bool, String)
 jump piece direction = 
     case direction of
        South => (cardinal_jump piece, "Can't jump backwards")
@@ -483,23 +482,23 @@ jump piece direction =
        South_west => (diagonal_jump piece, "Can't jump backward-left")
        
 ||| A Chu Shogi piece
-public record Piece where
+public export record Piece where
    constructor Make_piece
    piece_type : Piece_type
    piece_colour : Piece_colour
 
-Eq Piece where
+public export Eq Piece where
   (Make_piece pt1 pc1) == (Make_piece pt2 pc2) = pt1 == pt2 && pc1 == pc2
   
 ||| Is @ piece a monarch? I.e. does it affect victory conditions?
-abstract is_king : Piece -> Bool
+export is_king : Piece -> Bool
 is_king piece =
     case piece_type piece of
       King => True
       Crown_prince => True
       _ => False      
 
-abstract is_pawn_or_go_between : Piece -> Bool
+export is_pawn_or_go_between : Piece -> Bool
 is_pawn_or_go_between p = case piece_type p of
   Pawn       => True
   Go_between => True
@@ -514,7 +513,7 @@ promotable_types = [Lance, Reverse_chariot, Side_mover, Vertical_mover,
                  Dragon_horse, Dragon_king, Pawn, Go_between]
 
 ||| Is @ piece a type that promotes?
-abstract has_promotion : Piece_type -> Bool
+export has_promotion : Piece_type -> Bool
 has_promotion piece = elem piece promotable_types
 
 ||| Promoted version of @ piece
@@ -547,7 +546,7 @@ promotion piece =
 ||| @st - promotion status before move
 ||| @pr - did @p promote?
 ||| @dec - did @p decline to promote
-abstract promoted_piece : (p : Piece) -> (st : Promotion_status) -> (pr: Bool) -> (dec : Bool) -> (Piece, Promotion_status)
+export promoted_piece : (p : Piece) -> (st : Promotion_status) -> (pr: Bool) -> (dec : Bool) -> (Piece, Promotion_status)
 promoted_piece p st pr dec = case pr of
   True  => ((promotion p), No_promotion)
   False => case dec of

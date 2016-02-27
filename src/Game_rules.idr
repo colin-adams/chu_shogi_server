@@ -30,7 +30,6 @@ import Data.AVL.Dict
 import Piece
 
 %default total
-%access private
 
 {-
 

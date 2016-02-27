@@ -6,13 +6,12 @@
 ||| This module is here as a convenience than anything else.
 module Stack
 
-%access abstract
-%default total
+%access export
 
 ||| A Stack containing items of type `ty`.
 |||
 ||| @ty The type of elements in the stack.
-public
+public export
 Stack : (ty : Type) -> Type
 Stack ty = List ty
 

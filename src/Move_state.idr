@@ -20,10 +20,9 @@ module Move_state
 import Data.AVL.Dict
 
 %default total
-%access private
 
 ||| State that determines what moves will be legal
-public record Move_state where
+public export record Move_state where
   constructor Make_move_state
   ||| Is black to play?
   black_to_play : Bool
@@ -37,7 +36,7 @@ public record Move_state where
   black_positions : Dict String Nat
 
 ||| State of a newly started game prior to handicap set-up
-abstract initial_move_state : Move_state
+export initial_move_state : Move_state
 initial_move_state = Make_move_state True 0 False empty empty
 
 ||| Update positions with a new position
@@ -51,7 +50,7 @@ updated_positions d for = case lookup for d of
 ||| @old_state - previous state prior to move
 ||| @ln - Is a non-lion capturing a lion?
 ||| @forsythe - new position
-abstract next_move : (old_state : Move_state) -> (ln : Bool) -> (forsythe : String) -> Move_state
+export next_move : (old_state : Move_state) -> (ln : Bool) -> (forsythe : String) -> Move_state
 next_move old_state ln for = let btp = not (black_to_play old_state)
                                  cnt = (moves_played old_state) + 1
                                  pns = if btp then

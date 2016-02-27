@@ -25,8 +25,6 @@ import Board
 import Data.Vect
 import Piece
 
-%access private
-
 start_position_test : String -> Eff () [FILE_IO (), STDIO]
 start_position_test file_name = 
   do
@@ -38,7 +36,7 @@ start_position_test file_name =
         Right b => putStrLn "Passed"
 
 ||| Test setting up a correct initial position from a .fsy file
-abstract test_start_position : IO ()
+export test_start_position : IO ()
 test_start_position = run (start_position_test "../files/EVEN.fsy")
 
 

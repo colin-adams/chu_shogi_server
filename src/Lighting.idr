@@ -21,10 +21,9 @@ module Lighting
 import Coordinate
 
 %default total
-%access private
 
 ||| Type of move possible onto a square. A GUI can assign a different colour to each type when showing plausible (i.e. legal before considering repetition) moves
-public data Lighting_colour =
+public export data Lighting_colour =
        ||| Ordinary step or ranging move
        Step_lighting |
        ||| Jump move

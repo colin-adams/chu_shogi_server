@@ -32,7 +32,6 @@ import Stack
 import Forsythe_parser
 
 %default total
-%access private
 
 ||| Is piece @source on @board same as @piece?
 is_same_piece_at : (piece: Piece) -> (source: Coordinate) -> (board : Board) -> Bool
@@ -255,7 +254,7 @@ is_candidate_move st m = case is_valid_move_stage_2 m st of
 ||| @bd     - the position under consideration
 ||| @st     - game state (for lion capture rules)
 ||| @colour - colour of the attacker
-abstract attack_count : (bd : Board) -> (colour : Piece_colour) -> (st: Game_state) -> Nat
+export attack_count : (bd : Board) -> (colour : Piece_colour) -> (st: Game_state) -> Nat
 attack_count b col st = let moves = generate_captures b col
   in length $ filter (is_candidate_move st) moves
 
@@ -289,7 +288,7 @@ is_repetition b st pos = case st of
 ||| Is @m valid for @state?
 |||
 ||| A reason is given why validity fails
-abstract is_valid_move : (m : Move) -> (state : Game_state) -> (Bool, String)
+export is_valid_move : (m : Move) -> (state : Game_state) -> (Bool, String)
 is_valid_move m st = case is_valid_move_stage_2 m st of
   (False, v) => (False, v)
   _          => case st of

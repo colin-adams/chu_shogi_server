@@ -22,19 +22,20 @@ import Effect.File
 import Effect.StdIO
 import Effects
 import Game_state
-
-%access private
+import Handicaps
+import Data.AVL.Dict
 
 historical_game_1_test : String -> Eff () [FILE_IO (), STDIO]
 historical_game_1_test file_name = 
   do
-    ei <- parse_csg file_name
+    map <- handicaps_map "../files"
+    ei <- parse_csg_file file_name map
     case ei of
       Left e  => putStrLn $ "Failed: " ++ e
       Right g => putStrLn "Passed"
       
 ||| Test setting up a correct initial position from a .fsy file
-abstract test_historical_game_1 : IO ()
+export test_historical_game_1 : IO ()
 test_historical_game_1 = run (historical_game_1_test "../files/hist1.csg")
 
 

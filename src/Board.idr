@@ -27,17 +27,16 @@ import Direction
 import Coordinate
 
 %default total
-%access private
 
-public Square : Type
+public export Square : Type
 Square = Maybe (Piece, Promotion_status)
 
 ||| A 12 x 12 matrix of Squares
-public Board : Type
+public export Board : Type
 Board = Matrix 12 12 Square
 
 ||| Piece on @square of @board, if any, along with it's promotion status
-public piece_at : Coordinate -> Board -> Square
+public export piece_at : Coordinate -> Board -> Square
 piece_at c b = indices (rank c) (file c) b
 
 ||| Copy of @board where @piece sits on  @location
@@ -45,7 +44,7 @@ piece_at c b = indices (rank c) (file c) b
 ||| @piece - piece to be added
 ||| @location - square to be modified
 ||| @board - the position we are copying
-abstract with_piece_at : (piece: (Piece, Promotion_status)) -> (location : Coordinate) -> (board : Board) -> Board
+export with_piece_at : (piece: (Piece, Promotion_status)) -> (location : Coordinate) -> (board : Board) -> Board
 with_piece_at (p, st) c b = let r  = getRow (rank c) b
                                 r' = updateAt (file c) (\sq => Just (p, st)) r
                             in updateAt (rank c) (\rnk => r') b
@@ -54,7 +53,7 @@ with_piece_at (p, st) c b = let r  = getRow (rank c) b
 |||
 ||| @source - location of piece
 ||| @bd - position we examine
-abstract promotion_status_at : (source : Coordinate) -> (bd : Board) -> Promotion_status
+export promotion_status_at : (source : Coordinate) -> (bd : Board) -> Promotion_status
 promotion_status_at source bd = case piece_at source bd of
   Nothing => No_promotion
   Just (_, st) => st
@@ -63,17 +62,17 @@ promotion_status_at source bd = case piece_at source bd of
 |||
 ||| @location - square to be emptied
 ||| @board - the position we are copying
-abstract without_piece_at : (location : Coordinate) -> (board : Board) -> Board
+export without_piece_at : (location : Coordinate) -> (board : Board) -> Board
 without_piece_at c b = let r  = getRow (rank c) b
                            r' = updateAt (file c) (\sq => Nothing) r
                        in updateAt (rank c) (\rnk => r') b
 
 ||| Location on a specific board
-public Location : Type
+public export Location : Type
 Location = (Coordinate, Board)
 
 ||| A piece paired with it's location on a specific board
-public Occupied_location : Type
+public export Occupied_location : Type
 Occupied_location = (Location, Piece)
 
 ||| Returns the piece, coupled with it's location, from the board using a single
@@ -158,7 +157,7 @@ same_and_adjacent origin = case origin of
 ||| Use to find possible non-capture second moves for a lion (other than igui)
 ||| @source - square to which a lion has just moved by 1 step
 ||| @origin - square from which a lion has just moved by 1 step
-abstract empty_squares_adjacent_to_except : (source : Coordinate) -> (origin : Coordinate) -> (bd : Board) ->  List Coordinate
+export empty_squares_adjacent_to_except : (source : Coordinate) -> (origin : Coordinate) -> (bd : Board) ->  List Coordinate
 empty_squares_adjacent_to_except c2 c1 b = let squares    = [Make_coordinate r f | r <- same_and_adjacent (rank c2), f <- same_and_adjacent (file c2)]
                                                neither_of = \c => c1 /= c && c2 /= c
   in filter neither_of squares
@@ -167,7 +166,7 @@ empty_squares_adjacent_to_except c2 c1 b = let squares    = [Make_coordinate r f
 |||
 ||| @colour - subset of pieces
 ||| @board - position we are checking
-abstract pieces_of_colour : (colour : Piece_colour) -> (board : Board) -> List Occupied_location
+export pieces_of_colour : (colour : Piece_colour) -> (board : Board) -> List Occupied_location
 pieces_of_colour col b = filter (\ (_, p) => (piece_colour p) == col) (pieces b)
 
 ||| All squares on @board containing a piece of @colour other than @except
@@ -215,7 +214,7 @@ promotion_opportunity r1 r2 col st capt = let st_in  = in_promotion_zone r1 col
 ||| @declining - is the piece declining to promote?
 ||| @capturing - has the piece claimed to have captured?
 ||| We also return a validity message
-abstract check_promotion : (source : Coordinate) -> (destination : Coordinate) -> (board : Board) -> (promoting : Bool) ->
+export check_promotion : (source : Coordinate) -> (destination : Coordinate) -> (board : Board) -> (promoting : Bool) ->
   (declining : Bool) -> (capturing : Bool) -> (Bool, String)
 check_promotion c1 c2 b pr dec capt = case piece_at c1 b of
     Nothing => (False, "Starting square lacks a piece")
@@ -236,7 +235,7 @@ check_promotion c1 c2 b pr dec capt = case piece_at c1 b of
 ||| @board - the location of all pieces in the game
 ||| @destination - the square which the piece wants to jump to
 ||| We also return a validity message
-abstract can_jump_to : (piece : Piece) -> (source : Coordinate) -> (board : Board) -> (destination : Coordinate) -> (Bool, String)
+export can_jump_to : (piece : Piece) -> (source : Coordinate) -> (board : Board) -> (destination : Coordinate) -> (Bool, String)
 can_jump_to p c1 b c2 = case direction_and_range c1 c2 of
   Nothing     => (False, "Starting and ending squares are not in in orthogonal or diagonal arrangement")
   Just (d, r) => case r == 2 of
@@ -277,7 +276,7 @@ can_reach_from c2 c1 b d n col message = case next_square c1 d of
 ||| @board - the location of all squares in the game
 ||| @message - validity message to append to
 ||| We also return a validity message appended to @message
-abstract can_range_to : (piece : Piece) -> (source : Coordinate) -> (board : Board) -> (message : String) -> (destination : Coordinate) -> (Bool, String)
+export can_range_to : (piece : Piece) -> (source : Coordinate) -> (board : Board) -> (message : String) -> (destination : Coordinate) -> (Bool, String)
 can_range_to p c1 b message c2 = case direction_and_range c1 c2 of
   Nothing     => (False, message ++ ", Destination is not on an orthogonal or diagonal direction")
   Just (d, r) => case r > 0 of
@@ -292,7 +291,7 @@ can_range_to p c1 b message c2 = case direction_and_range c1 c2 of
 |||
 ||| This does not apply to Lions - @direction is for a white piece.  
 ||| We also return a validity message
-abstract has_lion_moves : Piece_type -> Direction -> (Bool, String)
+export has_lion_moves : Piece_type -> Direction -> (Bool, String)
 has_lion_moves p d = case p of
                           Soaring_eagle => case d of
                             North_east => (True, "")
@@ -310,7 +309,7 @@ has_lion_moves p d = case p of
 ||| @source is the starting square
 ||| @destination is assumed to be empty or occupied by an enemy piece.
 ||| We also return a validity reason
-abstract has_lion_a_to : Piece -> (source : Coordinate) -> (destination : Coordinate) -> (Bool, String)
+export has_lion_a_to : Piece -> (source : Coordinate) -> (destination : Coordinate) -> (Bool, String)
 has_lion_a_to p c1 c2 = if distance_to c1 c2 == 1 then
                            let d = direction_to p c1 c2 
                            in case d of
@@ -325,7 +324,7 @@ has_lion_a_to p c1 c2 = if distance_to c1 c2 == 1 then
 ||| @source is the starting square
 ||| @destination is assumed to be empty or occupied by an enemy piece.
 ||| We also return a validity reason
-abstract has_lion_b_to : Piece -> (source : Coordinate) -> (destination : Coordinate) -> (Bool, String)
+export has_lion_b_to : Piece -> (source : Coordinate) -> (destination : Coordinate) -> (Bool, String)
 has_lion_b_to p c1 c2 = if distance_to c1 c2 == 2 then
                            let d = direction_to p c1 c2 
                            in case d of
@@ -360,7 +359,7 @@ protects c b o = case o of
 ||| @location - square of the piece which we are checking
 ||| @colour - colour of the piece which we are checking
 ||| @board - the position we are checking
-abstract is_protected : (location : Coordinate) -> (colour : Piece_colour) -> (board : Board) -> Bool
+export is_protected : (location : Coordinate) -> (colour : Piece_colour) -> (board : Board) -> Bool
 is_protected c col b = let b2 = without_piece_at c b
                            pieces = pieces_of_colour_except col c b2
   in case find (protects c b2) pieces of
@@ -414,7 +413,7 @@ forsythe_rank r = "/" ++ (forsythe_cells 12 r) ++ "/"
 ||| George Hodge's modified Forsythe notation for Chu Shogi, suplemented by a prefix of = to indicate deferred promotion, of @board
 |||
 ||| @board - position being described
-abstract forsythe : (board : Board) -> String
+export forsythe : (board : Board) -> String
 forsythe b = concatMap forsythe_rank b
 
 ||| Number of kings/crown princes on board of given colour
@@ -428,15 +427,15 @@ king_count col b = let ocl  = pieces_of_colour col b
                        Just c  => c
 
 ||| Number of white kings/crown princes on board
-abstract white_king_count : Board -> Fin 3
+export white_king_count : Board -> Fin 3
 white_king_count b = king_count White b
                        
 ||| Number of black kings/crown princes on board
-abstract black_king_count : Board -> Fin 3
+export black_king_count : Board -> Fin 3
 black_king_count b = king_count Black b
 
 ||| Number of non-kings/crown princes on board
-abstract non_king_count : Board -> Fin 95
+export non_king_count : Board -> Fin 95
 non_king_count b = let ocl = pieces b
                        pcs = map snd ocl
                        nks = findIndices (not . is_king) pcs
@@ -461,7 +460,7 @@ display_rank rnk bd = let r = natToFin rnk 12
 ||| Ascii graphics display of a Board
 |||
 ||| We display from Black's point of view, simply because it is easier to do. This is just a debugging aid
-abstract display_board : Board -> String
+export display_board : Board -> String
 display_board bd = "    12  11  10  9   8   7   6   5   4   3   2   1\n" ++
                    "  +---+---+---+---+---+---+---+---+---+---+---+---+\n" ++
                    (display_rank 0 bd) ++ 

@@ -19,10 +19,9 @@
 module Direction
 
 %default total
-%access private
   
 ||| Directions of movement (North is the direction the Black player faces when seated at the board)
-public data Direction = North
+public export data Direction = North
                | East
                | South
                | West
@@ -31,7 +30,7 @@ public data Direction = North
                | South_west
                | North_west
          
-Eq Direction where
+public export Eq Direction where
   North == North = True
   South == South = True
   West == West = True
@@ -42,7 +41,7 @@ Eq Direction where
   North_west == North_west = True
   _ == _ = False
 
-Show Direction where
+public export Show Direction where
   show North = "N"
   show South = "S"
   show East = "E"
@@ -53,7 +52,7 @@ Show Direction where
   show South_west = "SW"
     
 ||| Reverse direction 
-abstract opposite_direction : Direction -> Direction
+export opposite_direction : Direction -> Direction
 opposite_direction d = case d of
   North => South
   South => North

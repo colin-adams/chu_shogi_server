@@ -25,7 +25,6 @@ import Piece
 import Coordinate
 
 %default total
-%access private
 
 ||| Can @piece jump from @source to capture on @target?
 can_jump_to_without_reason : Piece -> Coordinate -> Occupied_location -> Bool
@@ -130,7 +129,7 @@ generate_captures_to targets source = case source of
 |||
 ||| @bd     - position under consideration
 ||| @colour - Colour of pieces to move
-abstract generate_captures : (bd : Board) -> (colour : Piece_colour) -> List Move
+export generate_captures : (bd : Board) -> (colour : Piece_colour) -> List Move
 generate_captures b col = let sources = pieces_of_colour col b
                               targets = pieces_of_colour (opposite_colour col) b
   in concatMap (generate_captures_to targets) sources
