@@ -23,6 +23,7 @@ import Lightyear.Strings
 import Lightyear.Char
 import Board
 import Piece
+import Move
 import Game_state
 import Effect.File
 import Effects
@@ -54,8 +55,17 @@ parse_handicap = do
   nl    <- endOfLine
   parse_single_string
  
+parse_move: Parser Move
+parse_move = fail "TODO move"
+
+parse_num_move : Parser (Nat, Move)
+parse_num_move = do
+  num <- integer
+  mv <- parse_move
+  pure (num, mv)
+
 ||| Parse a String (the contents of a .csg file) yielding a Game_state or an error string
-from_csg : (handicaps : Dict String Game_state) -> Parser Game_state
+from_csg : (handicaps : Dict String Game_state) -> Parser (String, Game_state, List (Nat, Move))
 from_csg handicaps = do
   fmt <- parse_format
   case fmt == 3 of
@@ -74,20 +84,23 @@ from_csg handicaps = do
           skip endOfLine
           z <- char '0'  -- "Move zero" - an artifact of the implementation. We don't need this
           skip parse_name
-          fail $ "TODO: parse moves"
+          moves <- many parse_num_move
+          pure (hdcp, gs, moves) 
 
 ||| Re-construct the state of the game at the end of a Format-3 .csg file
 |||
 ||| @contents - contents of a .csg file
 ||| @handicaps - map of handicap names to initial game_states
-export parse_csg : (contents : String) -> (handicaps : Dict String Game_state) -> Either String Game_state
+export parse_csg : (contents : String) -> (handicaps : Dict String Game_state) -> Either String (String, Game_state, List (Nat, Move))
 parse_csg contents handicaps = parse (from_csg handicaps) contents
 
 ||| Re-construct the state of the game at the end of a Format-3 .csg file
+||| Result is a triple of handicap name, initial game state, and list of numbered moves.
+||| From that, legality must be checked.
 |||
 ||| @file_name - absolute or relative file-system path to .csg file e.g. /home/colin/Downlads/hist.csg 
 ||| @handicaps - map of handicap names to initial game_states
-export parse_csg_file : (file_name : String) -> (handicaps : Dict String Game_state) -> Eff (Either String Game_state) [FILE_IO ()]
+export parse_csg_file : (file_name : String) -> (handicaps : Dict String Game_state) -> Eff (Either String (String, Game_state, List (Nat, Move))) [FILE_IO ()]
 parse_csg_file file_name handicaps = do
   ei <- Effect.File.Default.readFile file_name
   case ei of
