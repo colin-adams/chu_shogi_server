@@ -24,7 +24,7 @@ import Data.Vect
 import Data.AVL.Dict
 import Board
 import Move_state
-import Stack
+import Data.Stack
 import Move
 import Piece
 import Coordinate

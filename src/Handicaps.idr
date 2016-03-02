@@ -28,7 +28,7 @@ import Piece
 import Board
 import Move_state
 import Move
-import Stack
+import Data.Stack
 
 %default total
 

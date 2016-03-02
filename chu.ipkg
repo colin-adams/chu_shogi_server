@@ -1,6 +1,6 @@
 package chu_shogi
 
-modules = Direction, Piece, Board, Move_state, Game_state, Stack, Game_rules, Move, Coordinate, Lighting, Move_validity, Move_generator, Forsythe_parser,
+modules = Direction, Piece, Board, Move_state, Game_state, Game_rules, Move, Coordinate, Lighting, Move_validity, Move_generator, Forsythe_parser,
 	Csg_parser, Handicaps,
 	Test.Forsythe_parser, Test.Move, Test.Csg_parser
 

@@ -34,7 +34,7 @@ import Effect.File
 import Effects
 import Data.AVL.Dict
 import Control.Monad.State
-import Stack
+import Data.Stack
 
 %hide parse
 
@@ -81,17 +81,37 @@ abbreviation abbrev1 abbrev2 = case abbrev2 of
     Nothing => [abbrev1]
     Just l  => abbrev1 :: [l]
  
+capture_move : Board -> Move_state -> King_count -> Move_stack -> Piece -> Coordinate -> Coordinate -> Piece_colour -> My_parser Move
+capture_move b mv_st kc stk p c1 c2 col = do fail "TODO"
+
+non_capture_move : Board -> Move_state -> King_count -> Move_stack -> Piece -> Coordinate -> Coordinate -> Piece_colour -> My_parser Move
+non_capture_move b mv_st kc stk p c1 c2 col = do fail "TODO"
+
 single_move : (abbrev : String) -> (c1 : Coordinate) -> (move_type : String) -> (c2: Coordinate) -> My_parser Move  -- TODO change to Valid_move
 single_move abbrev c1 move_type c2 = do
   (Running b mv_st kc stk, hcps) <- get | (Not_running reas, hcps2) => fail "Impossible game state"
   case piece_at c1 b of
     Nothing => fail "No piece at source square"
     Just (p, pr_st) => do
-      let col = case black_to_play mv_st of
+      if abbrev /= (abbreviation $ piece_type p) then
+        fail $ "Wrong abberviation: " ++ abbrev
+      else do
+        let col = piece_colour_from_state mv_st
+        if piece_colour p == col then
+          if is_capturing move_type then
+            capture_move b mv_st kc stk p c1 c2 col
+          else
+            non_capture_move b mv_st kc stk p c1 c2 col
+        else
+          fail "Incorrect piece colour for move"
+ where 
+   piece_colour_from_state : Move_state -> Piece_colour
+   piece_colour_from_state mv_st =
+     case black_to_play mv_st of
         True  => Black
         False => White
-      fail "TODO"
-      
+   is_capturing : String -> Bool
+   is_capturing move_type = if move_type == "x" then True else False
 
 double_move : (abbrev : String) -> (c1 : Coordinate) -> (move_type : String) -> (c2 : Coordinate) -> My_parser Move  -- TODO change to Valid_move
 double_move abbrev c1 move_type c2 = fail "TODO double move"

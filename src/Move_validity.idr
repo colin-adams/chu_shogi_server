@@ -28,7 +28,7 @@ import Coordinate
 import Data.AVL.Dict
 import Move_generator
 import Direction
-import Stack
+import Data.Stack
 import Forsythe_parser
 
 %default total
