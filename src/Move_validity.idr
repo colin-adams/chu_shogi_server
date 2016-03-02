@@ -30,6 +30,7 @@ import Move_generator
 import Direction
 import Data.Stack
 import Forsythe_parser
+import Data.So
 
 %default total
 
@@ -299,21 +300,22 @@ is_valid_move m st = case is_valid_move_stage_2 m st of
                          True  => (False, "repetition")
                          False => (True, "")
 
-public export data Move_validity : (Move, Game_state) -> Type where
-  Make_move_validity : {x : (Move, Game_state)} -> (is_valid_move (fst x) (snd x)) = (True, _) -> Move_validity x
+||| Is @m valid for @state?
+export is_move_valid : (Move, Game_state) -> Bool
+is_move_valid x = fst $ is_valid_move (fst x) (snd x)
   
 ||| Type of moves that are valid in a particular situation (with the proof erased)
 public export Valid_move : Type
-Valid_move = Subset (Move, Game_state) Move_validity
+Valid_move = (Move, Game_state, So True)
 
 
 ||| New board and game state resulting from applying @move in @state
 |||
-||| @move - the validated move to apply.
-export update_with_valid_move : (move : Valid_move) -> (Game_state)
-update_with_valid_move move = let (mv, gs) = getWitness move
-  in case gs of
+||| @v_move - the validated move to apply.
+export update_with_valid_move : (v_move : Valid_move) -> (Game_state)
+update_with_valid_move (move, gs, _) = case gs of
     Not_running _   => gs -- impossible
-    Running b _ _ _ => snd $ updated_by_move mv b gs
+    Running b _ _ _ => let (b', gs') = updated_by_move move b gs
+                       in gs'
 
 

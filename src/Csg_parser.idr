@@ -35,13 +35,13 @@ import Effects
 import Data.AVL.Dict
 import Control.Monad.State
 import Data.Stack
+import Data.So
 
 %hide parse
 
 ||| State parser for threading the current game state through the parser. The final state will be the result of the parser
 My_parser : Type -> Type
 My_parser = ParserT String (StateT (Game_state, Dict String Game_state) Identity)
-
 
 parse : My_parser a -> (string_to_parse : String) -> (initial_game_state: (Game_state, Dict String Game_state)) -> Either String a
 parse p i gs = let res = evalState (execParserT p i) gs
@@ -81,14 +81,42 @@ abbreviation abbrev1 abbrev2 = case abbrev2 of
     Nothing => [abbrev1]
     Just l  => abbrev1 :: [l]
  
-capture_move : Board -> Move_state -> King_count -> Move_stack -> Piece -> Coordinate -> Coordinate -> Piece_colour -> My_parser Move
-capture_move b mv_st kc stk p c1 c2 col = do fail "TODO"
 
-non_capture_move : Board -> Move_state -> King_count -> Move_stack -> Piece -> Coordinate -> Coordinate -> Piece_colour -> My_parser Move
-non_capture_move b mv_st kc stk p c1 c2 col = do fail "TODO"
+put_move : Move -> Game_state -> Dict String Game_state -> My_parser Move
+put_move mv gs hcps = do
+  let truth = is_move_valid (mv, gs)
+  case choose truth of
+    Right _  => fail "Move is invalid at that point in the game"
+    Left Oh => do
+      let vm = (mv, gs, Oh)
+      let gs' = update_with_valid_move vm
+      put (gs', hcps)
+      pure mv
+     
+capture_move : Board -> Move_state -> King_count -> Move_stack -> Piece -> Coordinate -> Coordinate -> Piece_colour -> Maybe Char -> Maybe Char -> My_parser Move
+capture_move b mv_st kc stk p c1 c2 col prm dcl = do
+  let mp = piece_at c1 b
+  case mp of
+    Nothing         => fail "No piece on source square for capture"
+    Just (p, pr_st) => case piece_at c2 b of
+      Nothing => fail "No piece on target square for capture"
+      Just (p2, _) => do
+        let pr = the Bool (case prm of 
+          Just _ => True
+          Nothing => False )
+        let nopr = the Bool (case dcl of 
+          Just _ => True
+          Nothing => False )          
+        let mv = Capture p c1 p2 c2 pr nopr
+        (gs, hcps) <- get
+        put_move mv gs hcps
 
-single_move : (abbrev : String) -> (c1 : Coordinate) -> (move_type : String) -> (c2: Coordinate) -> My_parser Move  -- TODO change to Valid_move
-single_move abbrev c1 move_type c2 = do
+
+non_capture_move : Board -> Move_state -> King_count -> Move_stack -> Piece -> Coordinate -> Coordinate -> Piece_colour -> Maybe Char -> Maybe Char -> My_parser Move
+non_capture_move b mv_st kc stk p c1 c2 col prm dcl = do fail "TODO"
+
+single_move : (abbrev : String) -> (c1 : Coordinate) -> (move_type : String) -> (c2: Coordinate) -> Maybe Char -> Maybe Char -> My_parser Move  -- TODO change to Valid_move
+single_move abbrev c1 move_type c2 prm dcl = do
   (Running b mv_st kc stk, hcps) <- get | (Not_running reas, hcps2) => fail "Impossible game state"
   case piece_at c1 b of
     Nothing => fail "No piece at source square"
@@ -99,9 +127,9 @@ single_move abbrev c1 move_type c2 = do
         let col = piece_colour_from_state mv_st
         if piece_colour p == col then
           if is_capturing move_type then
-            capture_move b mv_st kc stk p c1 c2 col
+            capture_move b mv_st kc stk p c1 c2 col prm dcl
           else
-            non_capture_move b mv_st kc stk p c1 c2 col
+            non_capture_move b mv_st kc stk p c1 c2 col prm dcl
         else
           fail "Incorrect piece colour for move"
  where 
@@ -118,7 +146,17 @@ double_move abbrev c1 move_type c2 = fail "TODO double move"
     
 ||| Parse + prefix
 parse_promoted : My_parser (Maybe Char)
-parse_promoted = opt (char '+')
+parse_promoted = do
+  char ' '
+  opt (char '+')
+
+||| Parse + suffix
+parse_promote : My_parser (Maybe Char)
+parse_promote = opt (char '+')
+
+||| Parse = suffix
+parse_decline : My_parser (Maybe Char)
+parse_decline = opt (char '=')
     
 parse_move : My_parser Move -- TODO change to Valid_move
 parse_move = do
@@ -137,9 +175,11 @@ parse_move = do
   rank2 <- letter
   let c1 = coordinate_from_rank_and_file rank file
   let c2 = coordinate_from_rank_and_file rank2 file2
+  prm <- parse_promoted
+  dcl <- parse_decline
   case (c1, c2) of
     (Just c1', Just c2') => do
-      (endOfLine >! (single_move (abbrev' pr abbrev) c1' mv_type c2') <|> 
+      (endOfLine >! (single_move (abbrev' pr abbrev) c1' mv_type c2' prm dcl) <|> 
                 (double_move (abbrev' pr abbrev) c1' mv_type c2'))
     _ => fail "Invalid coordinates"
  where abbrev' : Maybe Char -> List (Char) -> String
