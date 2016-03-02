@@ -50,7 +50,7 @@ is_lion_capture m = case m of
       Nothing  => is_lion (piece_type p2)
       Just p3' => is_lion (piece_type p2) || is_lion (piece_type p3')
 
--- Modified TSA notation for a move
+||| Modified TSA notation for a move
 public export Show Move where
   show (Pass p c1 c2)                 = (abbreviation $ piece_type p) ++ " " ++ (show c1) ++ " !" ++ (show c2)
   show (Igui p c1 _ c2)               = (abbreviation $ piece_type p) ++ " " ++ (show c1) ++ " x!" ++ (show c2)

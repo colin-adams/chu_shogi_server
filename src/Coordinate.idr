@@ -32,7 +32,17 @@ public export record Coordinate where
 public export Eq Coordinate where
   (Make_coordinate r f) == (Make_coordinate r' f') = r == r' && f == f'
 
--- Standard TSA coordinate notation 
+public export coordinate_from_rank_and_file : (rank : Char) -> (file : Integer) -> Maybe Coordinate
+coordinate_from_rank_and_file rank file =
+  let rank'  = (ord rank) - (ord 'a')
+      rank'' = fromIntegerNat $ cast rank'
+      r      = natToFin rank'' 12
+      f      = integerToFin file 12
+  in case (r, f) of
+    (Just r', Just f') => Just $ Make_coordinate r' f'
+    _ => Nothing
+
+||| Standard TSA coordinate notation 
 public export Show Coordinate where
   show (Make_coordinate rank file) = (singleton $ chr ((toIntNat (finToNat rank)) + ord 'a')) ++ (show $ (finToNat file) + 1)
 

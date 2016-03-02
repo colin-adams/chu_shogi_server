@@ -298,3 +298,22 @@ is_valid_move m st = case is_valid_move_stage_2 m st of
                        in case is_repetition b' st' f of
                          True  => (False, "repetition")
                          False => (True, "")
+
+public export data Move_validity : (Move, Game_state) -> Type where
+  Make_move_validity : {x : (Move, Game_state)} -> (is_valid_move (fst x) (snd x)) = (True, _) -> Move_validity x
+  
+||| Type of moves that are valid in a particular situation (with the proof erased)
+public export Valid_move : Type
+Valid_move = Subset (Move, Game_state) Move_validity
+
+
+||| New board and game state resulting from applying @move in @state
+|||
+||| @move - the validated move to apply.
+export update_with_valid_move : (move : Valid_move) -> (Game_state)
+update_with_valid_move move = let (mv, gs) = getWitness move
+  in case gs of
+    Not_running _   => gs -- impossible
+    Running b _ _ _ => snd $ updated_by_move mv b gs
+
+
