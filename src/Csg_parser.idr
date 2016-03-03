@@ -82,7 +82,7 @@ abbreviation abbrev1 abbrev2 = case abbrev2 of
     Just l  => abbrev1 :: [l]
  
 
-put_move : Move -> Game_state -> Dict String Game_state -> My_parser Move
+put_move : Move -> Game_state -> Dict String Game_state -> My_parser Valid_move
 put_move mv gs hcps = do
   let truth = is_move_valid (mv, gs)
   case choose truth of
@@ -91,9 +91,9 @@ put_move mv gs hcps = do
       let vm = (mv, gs, Oh)
       let gs' = update_with_valid_move vm
       put (gs', hcps)
-      pure mv
+      pure vm
      
-capture_move : Board -> Move_state -> King_count -> Move_stack -> Piece -> Coordinate -> Coordinate -> Piece_colour -> Maybe Char -> Maybe Char -> My_parser Move
+capture_move : Board -> Move_state -> King_count -> Move_stack -> Piece -> Coordinate -> Coordinate -> Piece_colour -> Maybe Char -> Maybe Char -> My_parser Valid_move
 capture_move b mv_st kc stk p c1 c2 col prm dcl = do
   let mp = piece_at c1 b
   case mp of
@@ -111,18 +111,53 @@ capture_move b mv_st kc stk p c1 c2 col prm dcl = do
         (gs, hcps) <- get
         put_move mv gs hcps
 
+capture_and_move : Piece -> Coordinate -> Piece -> Coordinate -> Coordinate -> My_parser Valid_move
+capture_and_move p c1 p2 c2 c3 = do
+  let mv = Double_move p c1 p2 c2 Nothing c3 
+  (gs, hcps) <- get
+  put_move mv gs hcps
 
-non_capture_move : Board -> Move_state -> King_count -> Move_stack -> Piece -> Coordinate -> Coordinate -> Piece_colour -> Maybe Char -> Maybe Char -> My_parser Move
-non_capture_move b mv_st kc stk p c1 c2 col prm dcl = do fail "TODO"
+double_capture : Piece -> Coordinate -> Piece -> Coordinate -> Piece -> Coordinate -> My_parser Valid_move
+double_capture p c1 p2 c2 p3 c3 = do
+  let mv = Double_move p c1 p2 c2 (Just p3) c3 
+  (gs, hcps) <- get
+  put_move mv gs hcps
 
-single_move : (abbrev : String) -> (c1 : Coordinate) -> (move_type : String) -> (c2: Coordinate) -> Maybe Char -> Maybe Char -> My_parser Move  -- TODO change to Valid_move
+non_capture_move : Board -> Move_state -> King_count -> Move_stack -> Piece -> Coordinate -> Coordinate -> Piece_colour -> Maybe Char -> Maybe Char -> My_parser Valid_move
+non_capture_move b mv_st kc stk p c1 c2 col prm dcl = do
+  let mp = piece_at c1 b
+  case mp of
+    Nothing         => fail "No piece on source square for capture"
+    Just (p, pr_st) => case piece_at c2 b of
+      Just _  => fail "target square is occupied"
+      Nothing => do
+        let pr = the Bool (case prm of 
+          Just _ => True
+          Nothing => False )
+        let nopr = the Bool (case dcl of 
+          Just _ => True
+          Nothing => False )          
+        let mv = Simple_move p c1 c2 pr nopr
+        (gs, hcps) <- get
+        put_move mv gs hcps
+ 
+piece_colour_from_state : Move_state -> Piece_colour
+piece_colour_from_state mv_st =
+  case black_to_play mv_st of
+    True  => Black
+    False => White
+   
+is_capturing : String -> Bool
+is_capturing move_type = if move_type == "x" then True else False
+                         
+single_move : (abbrev : String) -> (c1 : Coordinate) -> (move_type : String) -> (c2: Coordinate) -> Maybe Char -> Maybe Char -> My_parser Valid_move
 single_move abbrev c1 move_type c2 prm dcl = do
   (Running b mv_st kc stk, hcps) <- get | (Not_running reas, hcps2) => fail "Impossible game state"
   case piece_at c1 b of
     Nothing => fail "No piece at source square"
     Just (p, pr_st) => do
       if abbrev /= (abbreviation $ piece_type p) then
-        fail $ "Wrong abberviation: " ++ abbrev
+        fail $ "Wrong abbreviation: " ++ abbrev
       else do
         let col = piece_colour_from_state mv_st
         if piece_colour p == col then
@@ -132,18 +167,48 @@ single_move abbrev c1 move_type c2 prm dcl = do
             non_capture_move b mv_st kc stk p c1 c2 col prm dcl
         else
           fail "Incorrect piece colour for move"
- where 
-   piece_colour_from_state : Move_state -> Piece_colour
-   piece_colour_from_state mv_st =
-     case black_to_play mv_st of
-        True  => Black
-        False => White
-   is_capturing : String -> Bool
-   is_capturing move_type = if move_type == "x" then True else False
 
-double_move : (abbrev : String) -> (c1 : Coordinate) -> (move_type : String) -> (c2 : Coordinate) -> My_parser Move  -- TODO change to Valid_move
-double_move abbrev c1 move_type c2 = fail "TODO double move"
-    
+
+double_move : (abbrev : String) -> (c1 : Coordinate) -> (move_type : String) -> (c2 : Coordinate) -> My_parser Valid_move
+double_move abbrev c1 move_type c2 = do
+  (Running b mv_st kc stk, hcps) <- get | (Not_running reas, hcps2) => fail "Impossible game state"
+  case piece_at c1 b of
+    Nothing => fail "No piece at source square"
+    Just (p, pr_st) => do
+      if abbrev /= (abbreviation $ piece_type p) then
+        fail $ "Wrong abbreviation: " ++ abbrev
+      else do
+        let col = piece_colour_from_state mv_st
+        if piece_colour p == col then
+          if is_capturing move_type then do
+            case piece_at c2 b of
+              Nothing => fail "No piece on first target square"
+              Just (p2, _) => do
+                spaces
+                mt2 <- (string "-" <|> string "x")
+                spaces
+                file3 <- integer
+                rank3 <- letter
+                endOfLine
+                let c3 = coordinate_from_rank_and_file rank3 file3
+                case c3 of
+                  Nothing => fail "No piece on second target for double capture"
+                  Just c3' => do
+                    let capt2 = is_capturing mt2
+                    case piece_at c3' b of
+                      Nothing     => if capt2 then
+                                  fail "Second capture on empty square"
+                        else
+                          capture_and_move p c1 p2 c2 c3'
+                      Just (p3, _) => if capt2 then
+                           double_capture p c1 p2 c2 p3 c3'
+                        else
+                          fail "Capture and move on empty square"            
+          else
+            fail "Double move must capture on the first move"
+        else
+          fail "Incorrect piece colour for move"
+        
 ||| Parse + prefix
 parse_promoted : My_parser (Maybe Char)
 parse_promoted = do
@@ -158,7 +223,7 @@ parse_promote = opt (char '+')
 parse_decline : My_parser (Maybe Char)
 parse_decline = opt (char '=')
     
-parse_move : My_parser Move -- TODO change to Valid_move
+parse_move : My_parser Valid_move
 parse_move = do
   spaces
   pr <- parse_promoted

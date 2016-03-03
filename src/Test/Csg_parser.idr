@@ -23,6 +23,8 @@ import Effect.StdIO
 import Effects
 import Game_state
 import Handicaps
+import Move_state
+import Board
 import Data.AVL.Dict
 
 historical_game_1_test : String -> Eff () [FILE_IO (), STDIO]
@@ -32,7 +34,11 @@ historical_game_1_test file_name =
     ei <- parse_csg_file file_name map
     case ei of
       Left e  => putStrLn $ "Failed: " ++ e
-      Right g => putStrLn "Passed"
+      Right g => do
+        putStrLn "Passed"
+        case g of
+          (Not_running _) => putStrLn "\nOops\n"
+          (Running b _ _ _ ) => putStrLn $ "\n" ++ (display_board b)
       
 ||| Test setting up a correct initial position from a .fsy file
 export test_historical_game_1 : IO ()

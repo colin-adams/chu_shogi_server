@@ -303,8 +303,8 @@ is_valid_move m st = case is_valid_move_stage_2 m st of
 ||| Is @m valid for @state?
 export is_move_valid : (Move, Game_state) -> Bool
 is_move_valid x = fst $ is_valid_move (fst x) (snd x)
-  
-||| Type of moves that are valid in a particular situation (with the proof erased)
+
+||| Type of moves that are valid in a particular situation
 public export Valid_move : Type
 Valid_move = (Move, Game_state, So True)
 
