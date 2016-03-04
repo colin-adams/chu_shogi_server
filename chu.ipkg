@@ -8,4 +8,4 @@ sourcedir = src
 
 pkgs = contrib, effects, containers, lightyear
 
-tests = Test.Forsythe_parser.test_start_position, Test.Move.test_moves_from_start, Test.Csg_parser.test_historical_game_1
+tests = Test.Forsythe_parser.test_start_position, Test.Move.test_moves_from_start, Test.Csg_parser.test_historical_game_1, Test.Csg_parser.test_historical_game_2

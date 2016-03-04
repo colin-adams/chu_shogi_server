@@ -1,0 +1,171 @@
+3
+board.data
+EVEN
+Kondo
+Konishi
+
+
+
+
+
+0 P 1a - 1a
+1 Ln 7j - 6h
+1 P 5d - 5e
+2 P 8i - 8h
+2 Ln 6c - 7e
+3 Ln 6h - 6g
+3 GB 9e - 9f
+4 P 5i - 5h
+4 P 9d - 9e
+5 P 10i - 10h
+5 DH 9c - 9d
+6 Ln 6g - 7g
+6 P 3d - 3e
+7 P 3i - 3h
+7 DH 4c - 2e
+8 DH 4j - 2h
+8 Ph 7b - 5d
+9 GB 4h - 4g
+9 DH 2e x 4g
+10 P 4i - 4h
+10 DH 4g - 2e
+11 C 3l - 4k
+11 P 6d - 6e
+12 DH 9j - 11h
+12 Ky 6b - 6d
+13 Ln 7g - 5i
+13 DK 5c - 6b
+14 C 4k - 4j
+14 Ln 7e - 7f
+15 C 4j - 4i
+15 P 6e - 6f
+16 P 7i - 7h
+16 P 8d - 8e
+17 Ph 6k - 8i
+17 P 5e - 5f
+18 P 7h - 7g
+18 Ln 7f - 6e
+19 Ln 5i - 7h
+19 Ph 5d - 5e
+20 P 8h - 8g
+20 R 3c - 5c
+21 GB 9h - 9g
+21 GB 9f x 9g
+22 Ln 7h x 9g
+22 DH 9d - 10e
+23 P 10h - 10g
+23 C 10a - 9b
+24 P 10g - 10f
+24 DH 10e - 9d
+25 Ph 8i - 10g
+25 Ky 6d - 7e
+26 Ky 7k - 7i
+26 FK 7c - 6d
+27 P 8g - 8f
+27 P 8e x 8f
+28 DH 11h - 11g
+28 P 11d - 11e
+29 DK 8j - 7k
+29 DK 8c - 7b
+30 R 10j - 8j
+30 R 5c - 8c
+31 VM 11j - 10j
+31 C 9b - 9c
+32 DK 5j - 6k
+32 C 9c - 8d
+33 P 12i - 12h
+33 GB 4e - 4f
+34 FL 11l - 11k
+34 FK 6d - 4b
+35 P 6i - 6h
+35 P 4d - 4e
+36 P 6h - 6g
+36 P 6f x 6g
+37 Ln 9g - 7h
+37 C 8d - 8e
+38 Ln 7h x! 6g
+38 Ln 6e - 8d
+39 Ln 7h - 9g
+39 DK 6b x 6j +
+40 R 3j x 6j
+40 R 8c - 6c
+41 VM 2j - 3j
+41 R 6c x 6j +
+42 R 8j x 6j
+42 R 10c - 6c
+43 Ky 7i - 6h
+43 P 9e - 9f
+44 Ln 9g x! 9f
+44 Ky 7e - 9e
+45 Ln 9g - 10h
+45 P 8f - 8g
+46 Ln 10h - 10i
+46 Ln 8d - 9f
+47 Ph 10g - 12i
+47 P 8g - 8h
+48 P 9i - 9h
+48 Ln 9f - 8g
+49 Ln 10i - 9i
+49 Ln 8g x! 9h
+50 Ln 9i x 8h - 8i
+50 Ky 9e - 9g
+51 DH 11g - 8j
+51 DH 9d - 11f
+52 Ln 8i - 9j
+52 VM 11c - 10c
+53 DH 2h - 4j
+53 C 8e - 9f
+54 DH 4j - 5j
+54 Ln 8g - 8f
+55 Ln 9j - 7h
+55 DH 11f x 6k +
+56 DK 7k x 6k
+56 DK 7b - 6b
+57 VM 10j - 9j
+57 FK 4b - 7e
+58 DK 6k - 7k
+58 VM 10c - 9c
+59 FL 11k - 10j
+59 VM 9c - 8c
+60 DH 8j - 9k
+60 Ln 8f x! 7g
+61 Ln 7h - 5i
+61 B 3b - 8g
+62 DH 5j - 4j
+62 Ln 8f - 10h
+63 DK 7k x 7e
+63 B 10b x 7e
+64 B 10k - 11l
+64 Ln 10h - 8i
+65 VM 9j x 9g
+65 Ln 8i x 9g
+66 DE 6l - 7k
+66 Ln 9g - 9h
+67 P 5h - 5g
+67 P 5f x 5g
+68 Ky 6h x 5g
+68 B 7e - 8f
+69 Ky 5g x 5e
+69 B 8f x 5i +
+70 Ky 5e - 4d +
+70 +B 5i x 4j
+71 B 3k x 4j
+71 BT 8b - 7c
+72 BT 8k - 7j
+72 Ln 9h - 7f
+73 +Ky 4d x! 4e
+73 R 6c - 6d
+74 +Ky 4d x 3e x 4f
+74 VM 2c - 3c
+75 B 4j - 1g
+75 DK 6b - 6c
+76 B 11l - 4e
+76 R 6d x 6j +
+77 BT 5k x 6j
+77 DK 6c - 6d
+78 B 1g - 4d +
+78 Ln 7f - 6e
+79 +B 4d - 2f
+79 DH 2e x 2f
+80 +Ky 4f x 2f
+80 Ln 6e - 4d

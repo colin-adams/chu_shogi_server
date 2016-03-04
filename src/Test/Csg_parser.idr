@@ -27,8 +27,8 @@ import Move_state
 import Board
 import Data.AVL.Dict
 
-historical_game_1_test : String -> Eff () [FILE_IO (), STDIO]
-historical_game_1_test file_name = 
+historical_game_test : String -> Eff () [FILE_IO (), STDIO]
+historical_game_test file_name = 
   do
     map <- handicaps_map "../files"
     ei <- parse_csg_file file_name map
@@ -40,9 +40,14 @@ historical_game_1_test file_name =
           (Not_running _) => putStrLn "\nOops\n"
           (Running b _ _ _ ) => putStrLn $ "\n" ++ (display_board b)
       
-||| Test setting up a correct initial position from a .fsy file
+||| Test setting up a correct final position from a .csg file
 export test_historical_game_1 : IO ()
-test_historical_game_1 = run (historical_game_1_test "../files/hist1.csg")
+test_historical_game_1 = run (historical_game_test "../files/hist1.csg")
+
+      
+||| Test setting up a correct final position from a .ssg file
+export test_historical_game_2 : IO ()
+test_historical_game_2 = run (historical_game_test "../files/hist2.csg")
 
 
   
