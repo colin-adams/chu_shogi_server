@@ -141,7 +141,7 @@ is_valid_move_stage_1 m (Running b _ _ _) = case m of
     False => (False, "Selected piece is not piece on starting square")
     True  => case piece_at c2 b of
       Nothing => (False, "No piece on target square to capture")
-      Just (p1, _) => case (piece_colour p1) == (piece_colour p2) of
+      Just _ => case (piece_colour p) == (piece_colour p2) of
           True  => (False, "Can't capture piece of same colour")
           False => case is_lion (piece_type p) of
             True  => (True, "")

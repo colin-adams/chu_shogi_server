@@ -17,7 +17,7 @@
 
 ||| Parser for format-3 .csg files (as produced by Chu_shogi 2.10 (?) by Colin Adams) 
 |||
-||| Only the notation present in the six historical games has been parsed. Passes therefore aren't dealt with, nor Igui
+||| Only the notation present in the six historical games has been parsed. Passes therefore aren't dealt with
 module Csg_parser
 
 import Lightyear
@@ -36,7 +36,6 @@ import Data.AVL.Dict
 import Control.Monad.State
 import Data.Stack
 import Data.So
-import Debug.Trace
 
 %hide parse
 
@@ -113,6 +112,18 @@ capture_move b mv_st kc stk p c1 c2 col prm dcl = do
         let mv = Capture p c1 p2 c2 pr nopr
         (gs, hcps) <- get
         put_move mv gs hcps
+     
+igui_move : Board -> Move_state -> King_count -> Move_stack -> Piece -> Coordinate -> Coordinate -> Piece_colour -> My_parser Valid_move
+igui_move b mv_st kc stk p c1 c2 col = do
+  let mp = piece_at c1 b
+  case mp of
+    Nothing         => fail "No piece on source square for capture"
+    Just (p, pr_st) => case piece_at c2 b of
+      Nothing => fail "No piece on target square for capture"
+      Just (p2, _) => do
+        let mv = Igui p c1 p2 c2
+        (gs, hcps) <- get
+        put_move mv gs hcps
 
 capture_and_move : Piece -> Coordinate -> Piece -> Coordinate -> Coordinate -> My_parser Valid_move
 capture_and_move p c1 p2 c2 c3 = do
@@ -152,11 +163,14 @@ piece_colour_from_state mv_st =
    
 is_capturing : String -> Bool
 is_capturing move_type = if move_type == "x" then True else False
+   
+is_igui : String -> Bool
+is_igui move_type = if move_type == "x!" then True else False
                          
 single_move : (abbrev : String) -> (c1 : Coordinate) -> (move_type : String) -> (c2: Coordinate) -> Maybe Char -> Maybe Char -> My_parser Valid_move
 single_move abbrev c1 move_type c2 prm dcl = do
   (Running b mv_st kc stk, hcps) <- get | (Not_running reas, hcps2) => fail "Impossible game state"
-  case trace (display_board b) (piece_at c1 b) of
+  case piece_at c1 b of
     Nothing => fail "No piece at source square"
     Just (p, pr_st) => do
       if abbrev /= (abbreviation $ piece_type p) then
@@ -166,8 +180,11 @@ single_move abbrev c1 move_type c2 prm dcl = do
         if piece_colour p == col then
           if is_capturing move_type then
             capture_move b mv_st kc stk p c1 c2 col prm dcl
-          else
-            non_capture_move b mv_st kc stk p c1 c2 col prm dcl
+          else  
+            if is_igui move_type then
+              igui_move b mv_st kc stk p c1 c2 col
+            else
+              non_capture_move b mv_st kc stk p c1 c2 col prm dcl
         else
           fail "Incorrect piece colour for move"
 
@@ -238,7 +255,7 @@ parse_move = do
   file <- integer
   rank <- letter
   spaces
-  mv_type <- (string "-" <|> string "x" <|> string "x!")
+  mv_type <- (string "-" <|> string "x!" <|> string "x")
   spaces
   file2 <- integer
   rank2 <- letter

@@ -264,9 +264,11 @@ can_reach_from c2 c1 b d n col message = case next_square c1 d of
         S m => can_reach_from c2 c' b d m col message
     Just (p, _) => case piece_colour p == col of
       True  => (False, message ++ ", Can't capture a piece of your own side")
-      False => case n of
-        Z   => (False, message ++ ", Can't reach that square within piece's range")
-        S m => can_reach_from c2 c' b d m col message
+      False =>  case c' == c2 of
+        True  => (True, "")
+        False => case n of
+          Z   => (False, message ++ ", Can't reach that square within piece's range")
+          S m => can_reach_from c2 c' b d m col message
                             
 ||| Can @piece range to @destination?
 |||
