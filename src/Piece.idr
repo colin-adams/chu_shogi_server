@@ -429,7 +429,7 @@ northern_diagonal_range piece = if elem piece [White_horse, Bishop, Promoted_bis
                                   1
                                 else 0
 
-||| Distance @ piece  can move in a soth-westerly or south-easterly direction on an open board                      
+||| Distance @ piece  can move in a south-westerly or south-easterly direction on an open board                      
 southern_diagonal_range : Piece_type -> Nat
 southern_diagonal_range piece = if elem piece [Bishop, Promoted_bishop, Free_king, Promoted_phoenix, Flying_ox, Whale,
                                         Promoted_ferocious_leopard, Free_boar, Dragon_horse, Horned_falcon, Soaring_eagle] then

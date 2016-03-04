@@ -158,25 +158,29 @@ is_valid_move_stage_1 m (Running b _ _ _) = case m of
          _             => (False, "That type of piece may not make double moves")
   Simple_move p c1 c2 pr dec    =>  case is_same_piece_at p c1 b of
    False => (False, "Selected piece is not piece on starting square")
-   True => case piece_at c2 b of
-     Just _  => (False, "Can't make a non-capturing move to an occupied square")
-     Nothing => case can_jump_to p c1 b c2 of
-       (True, _)  => check_promotion c1 c2 b pr dec False 
-       (False, v) => case can_range_to p c1 b v c2 of
-         (True, _)  => check_promotion c1 c2 b pr dec False
-         (False, v') => (False, v')
+   True => case is_lion (piece_type p) of
+     True => is_lion_move p c1 c2 b False
+     False => case piece_at c2 b of
+       Just _  => (False, "Can't make a non-capturing move to an occupied square")
+       Nothing => case can_jump_to p c1 b c2 of
+         (True, _)  => check_promotion c1 c2 b pr dec False 
+         (False, v) => case can_range_to p c1 b v c2 of
+           (True, _)  => check_promotion c1 c2 b pr dec False
+           (False, v') => (False, v')
   
   Capture p c1 p2 c2 pr dec    =>  case is_same_piece_at p c1 b of
    False => (False, "Selected piece is not piece on starting square")
-   True => case piece_at c2 b of
-     Nothing  => (False, "No piece on target square to capture")
-     Just (p', _) => case (piece_colour p) == (piece_colour p') of
-       True  => (False, "Can't capture piece of same colour")
-       False => case can_jump_to p c1 b c2 of
-         (True, _)  => check_promotion c1 c2 b pr dec True
-         (False, v) => case can_range_to p c1 b v c2 of
+   True => case is_lion (piece_type p) of
+     True => is_lion_move p c1 c2 b True
+     False => case piece_at c2 b of
+       Nothing  => (False, "No piece on target square to capture")
+       Just (p', _) => case (piece_colour p) == (piece_colour p') of
+         True  => (False, "Can't capture piece of same colour")
+         False => case can_jump_to p c1 b c2 of
            (True, _)  => check_promotion c1 c2 b pr dec True
-           (False, v') => (False, v')
+           (False, v) => case can_range_to p c1 b v c2 of
+             (True, _)  => check_promotion c1 c2 b pr dec True
+             (False, v') => (False, v')
    
 ||| Is @m valid for @state, ignoring repetition_rule?
 |||

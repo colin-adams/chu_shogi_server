@@ -280,11 +280,11 @@ export can_range_to : (piece : Piece) -> (source : Coordinate) -> (board : Board
 can_range_to p c1 b message c2 = case direction_and_range c1 c2 of
   Nothing     => (False, message ++ ", Destination is not on an orthogonal or diagonal direction")
   Just (d, r) => case r > 0 of
-    False => (False, message ++ ", Zero range")
+    False => (False, message ++ ", Zero range in direction " ++ show d)
     True  => let col = piece_colour p
                  d'  = if col == Black then opposite_direction d else d
              in case range (piece_type p) d' of
-      Z   => (False, message ++ ", Piece has zero range in direction " ++ (show d'))
+      Z   => (False, message ++ ", Piece has zero range in direction " ++ show d')
       S n => can_reach_from c2 c1 b d n (piece_colour p) message
       
 ||| Does non-lion @piece have lion moves in @direction?
@@ -303,7 +303,7 @@ has_lion_moves p d = case p of
 
                           _             => (False, "Only Soaring eagles and Horned falcons have directional lion power")
 
-
+     
 ||| Does @piece have a one-square lion move from @source to @destination
 |||
 ||| @source is the starting square
@@ -319,7 +319,7 @@ has_lion_a_to p c1 c2 = if distance_to c1 c2 == 1 then
                             (False, "Lion A moves must be to a square at a distance of 1 from the origin")
 
 
-||| Does @piece have a direct one-square jump to lion move from @source to @destination
+||| Does @piece have a direct two-square jump to lion move from @source to @destination
 |||
 ||| @source is the starting square
 ||| @destination is assumed to be empty or occupied by an enemy piece.
@@ -328,10 +328,32 @@ export has_lion_b_to : Piece -> (source : Coordinate) -> (destination : Coordina
 has_lion_b_to p c1 c2 = if distance_to c1 c2 == 2 then
                            let d = direction_to p c1 c2 
                            in case d of
-                             Nothing => (False, "The square at a distance of one does not lie on an orthogonal or diagonal line (impossible!)") -- proof
+                             Nothing => (False, "The square at a distance of two does not lie on an orthogonal or diagonal line (impossible!)") -- proof
                              Just dir => has_lion_moves (piece_type p) dir
                         else
                           (False, "Direct jump lion B moves must be to a square at a distance of 2 from the origin")
+
+||| Does @piece (assumed by precondition to be a lion) have a a valid one-stage move from @source to @destination?
+||| Special lion-capture rules are not considered.
+|||
+||| @piece - the Lion that is moving
+||| @source - the location of @piece (assumed, not checked - a precondition)
+||| @destination - target of the move
+||| @board - the position we consider
+||| @capturing - are we testing for a capture?
+export is_lion_move : (piece : Piece) -> (source : Coordinate) -> (destination : Coordinate) -> (board: Board) -> (capturing : Bool) -> (Bool, String)
+is_lion_move p c1 c2 b capt =
+  let p2 = piece_at c2 b
+      ok = consistent p2 capt
+      d  = distance_between c1 c2 
+  in case d == 1 || d == 2 of
+    True  => (ok, "Capture claim and square occupancy inconsistent")
+    False => (False, "Start and end squares are not in a lion-move relation")
+ where
+   consistent : Maybe (Piece, Promotion_status) -> Bool -> Bool
+   consistent p2' capt = case p2' of
+     Nothing        => not capt
+     Just (p2'', _) => capt && (piece_colour p /= piece_colour p2'')
 
 
 ||| Can piece @occ move to @target on @board?

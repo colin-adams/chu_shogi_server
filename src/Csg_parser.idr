@@ -36,6 +36,7 @@ import Data.AVL.Dict
 import Control.Monad.State
 import Data.Stack
 import Data.So
+import Debug.Trace
 
 %hide parse
 
@@ -86,7 +87,9 @@ put_move : Move -> Game_state -> Dict String Game_state -> My_parser Valid_move
 put_move mv gs hcps = do
   let truth = is_move_valid (mv, gs)
   case choose truth of
-    Right _  => fail "Move is invalid at that point in the game"
+    Right _  => do
+      case is_valid_move mv gs of
+        (_, reas) => fail $ "Move (" ++ show mv ++ ") is invalid at that point in the game. Reason is " ++ reas
     Left Oh => do
       let vm = (mv, gs, Oh)
       let gs' = update_with_valid_move vm
@@ -129,7 +132,7 @@ non_capture_move b mv_st kc stk p c1 c2 col prm dcl = do
   case mp of
     Nothing         => fail "No piece on source square for capture"
     Just (p, pr_st) => case piece_at c2 b of
-      Just _  => fail "target square is occupied"
+      Just _  => fail $ "target square " ++ (show c2) ++  " is occupied"
       Nothing => do
         let pr = the Bool (case prm of 
           Just _ => True
@@ -153,11 +156,11 @@ is_capturing move_type = if move_type == "x" then True else False
 single_move : (abbrev : String) -> (c1 : Coordinate) -> (move_type : String) -> (c2: Coordinate) -> Maybe Char -> Maybe Char -> My_parser Valid_move
 single_move abbrev c1 move_type c2 prm dcl = do
   (Running b mv_st kc stk, hcps) <- get | (Not_running reas, hcps2) => fail "Impossible game state"
-  case piece_at c1 b of
+  case trace (display_board b) (piece_at c1 b) of
     Nothing => fail "No piece at source square"
     Just (p, pr_st) => do
       if abbrev /= (abbreviation $ piece_type p) then
-        fail $ "Wrong abbreviation: " ++ abbrev
+        fail $ "Wrong abbreviation: " ++ abbrev ++ " at " ++ show c1 ++ ", actual piece on board is " ++  (abbreviation $ piece_type p) ++ "\n" ++ (display_board b)
       else do
         let col = piece_colour_from_state mv_st
         if piece_colour p == col then
@@ -176,7 +179,7 @@ double_move abbrev c1 move_type c2 = do
     Nothing => fail "No piece at source square"
     Just (p, pr_st) => do
       if abbrev /= (abbreviation $ piece_type p) then
-        fail $ "Wrong abbreviation: " ++ abbrev
+        fail $ "Wrong abbreviation: " ++ abbrev ++ ", actual piece on board is " ++  (abbreviation $ piece_type p)
       else do
         let col = piece_colour_from_state mv_st
         if piece_colour p == col then
@@ -212,7 +215,7 @@ double_move abbrev c1 move_type c2 = do
 ||| Parse + prefix
 parse_promoted : My_parser (Maybe Char)
 parse_promoted = do
-  char ' '
+  opt (char ' ')
   opt (char '+')
 
 ||| Parse + suffix
@@ -225,6 +228,7 @@ parse_decline = opt (char '=')
     
 parse_move : My_parser Valid_move
 parse_move = do
+  skip integer
   spaces
   pr <- parse_promoted
   abbrev1 <- letter
@@ -266,7 +270,7 @@ from_csg = do
         Just gs => do
           put (gs, handicaps)
           blk_nm <- parse_name
-          wht_nm <- parse_name 
+          wht_nm <- parse_name
           skip parse_name  -- The next lines are some kind of comment facility I think - TODO need to check.
           skip endOfLine
           skip endOfLine

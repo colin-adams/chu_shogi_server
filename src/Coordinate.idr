@@ -25,6 +25,8 @@ import Direction
 %default total
 
 ||| Board coordinates
+|||
+|||Note that TSA notation numbers the files in reverse order, so 12 maps to zero, 11 to 1, etc.
 public export record Coordinate where
   constructor Make_coordinate 
   rank, file: Fin 12
@@ -32,19 +34,24 @@ public export record Coordinate where
 public export Eq Coordinate where
   (Make_coordinate r f) == (Make_coordinate r' f') = r == r' && f == f'
 
+||| Coordinate from TSA notation
+|||
+|||Note that TSA notation numbers the files in reverse order, so 12 maps to zero, 11 to 1, etc.
 public export coordinate_from_rank_and_file : (rank : Char) -> (file : Integer) -> Maybe Coordinate
 coordinate_from_rank_and_file rank file =
   let rank'  = (ord rank) - (ord 'a')
       rank'' = fromIntegerNat $ cast rank'
       r      = natToFin rank'' 12
-      f      = integerToFin file 12
+      f      = integerToFin (12 - file) 12
   in case (r, f) of
     (Just r', Just f') => Just $ Make_coordinate r' f'
     _ => Nothing
 
 ||| Standard TSA coordinate notation 
+|||
+|||Note that TSA notation numbers the files in reverse order, so 12 maps to zero, 11 to 1, etc.
 public export Show Coordinate where
-  show (Make_coordinate rank file) = (singleton $ chr ((toIntNat (finToNat rank)) + ord 'a')) ++ (show $ (finToNat file) + 1)
+  show (Make_coordinate rank file) = (show $ (12 - finToInteger (file))) ++ (singleton $ chr ((toIntNat (finToNat rank)) + ord 'a'))
 
 ||| Absolute difference between rank @source to rank @distant
 rank_difference : (source : Coordinate) -> (distant : Coordinate) -> Nat
@@ -54,9 +61,9 @@ rank_difference c1 c2 = let r1 = toIntegerNat .finToNat $ rank c1
 
 ||| Absolute difference between file @source to file @distant
 file_difference : (source : Coordinate) -> (distant : Coordinate) -> Nat
-file_difference c1 c2 = let r1 = toIntegerNat . finToNat $ file c1
-                            r2 = toIntegerNat . finToNat $ file c2
-                        in fromInteger $ abs (r1 - r2)
+file_difference c1 c2 = let f1 = toIntegerNat . finToNat $ file c1
+                            f2 = toIntegerNat . finToNat $ file c2
+                        in fromInteger $ abs (f1 - f2)
 
 ||| Absolute distance from @source to @destination
 |||
@@ -89,7 +96,8 @@ path_to c1 c2 = let r  = toIntegerNat $ finToNat $ rank c1
                     f' = toIntegerNat $ finToNat $ file c2
                  in (r' - r, f' - f)
 
-||| Direction and range for piece-colour from @source to @destination
+||| Direction and range from @source to @destination
+||| Diecrtions are considered from White's point of view
 |||
 ||| If not one of the principal 8 directions we return Nothing
 export direction_and_range : (source : Coordinate) -> (destination : Coordinate) -> Maybe (Direction, Nat)
@@ -99,20 +107,20 @@ direction_and_range c1 c2 = let (y, x) = path_to c1 c2 in
                                              Just (West, fromInteger x)
                                           else
                                             if x == y then
-                                                Just (North_east, fromInteger x)
+                                                Just (North_west, fromInteger x)
                                             else
                                               if x == -y then
-                                                Just (South_east, fromInteger x)
+                                                Just (South_west, fromInteger x)
                                               else
                                                 Nothing
                                     LT => if y == 0 then
-                                               Just (West, fromInteger (-x))
+                                               Just (East, fromInteger (-x))
                                           else
                                             if x == y then
-                                                Just (South_west, fromInteger (-x))
+                                                Just (South_east, fromInteger (-x))
                                             else
                                               if x == (-y) then
-                                                  Just (North_west, fromInteger y)         
+                                                  Just (North_east, fromInteger y)         
                                               else
                                                 Nothing
                                     EQ => if y == 0 then
@@ -146,21 +154,21 @@ next_square c d = case d of
              S n => case natToFin n 12 of
                Nothing => Nothing
                Just r' => Just (Make_coordinate r' (file c))
-  East  => case natToFin (finToNat (file c) + 1) 12 of
+  West  => case natToFin (finToNat (file c) + 1) 12 of
     Nothing => Nothing
     Just f  => Just (Make_coordinate (rank c) f)                  
-  West  => let f = finToNat (file c) 
+  East  => let f = finToNat (file c) 
            in case f of
              Z => Nothing
              S n => case natToFin n 12 of             
                Nothing => Nothing
                Just f' => Just (Make_coordinate (rank c) f')             
-  North_east => case natToFin (finToNat (rank c) + 1) 12 of
+  North_west => case natToFin (finToNat (rank c) + 1) 12 of
     Nothing => Nothing
     Just r  => case natToFin (finToNat (file c) + 1) 12 of
       Nothing => Nothing
       Just f  => Just (Make_coordinate r f)
-  North_west => case natToFin (finToNat (rank c) + 1) 12 of
+  North_east => case natToFin (finToNat (rank c) + 1) 12 of
     Nothing => Nothing
     Just r  => let f = finToNat (file c) 
                in case f of
@@ -168,7 +176,7 @@ next_square c d = case d of
                  S n => case natToFin n 12 of             
                    Nothing => Nothing
                    Just f' => Just (Make_coordinate r f')             
-  South_east => let r = finToNat (rank c) 
+  South_west => let r = finToNat (rank c) 
                 in case r of
                   Z => Nothing
                   S n => case natToFin n 12 of
@@ -176,7 +184,7 @@ next_square c d = case d of
                     Just r' => case natToFin (finToNat (file c) + 1) 12 of
                       Nothing => Nothing
                       Just f  => Just (Make_coordinate r' f)
-  South_west => let r = finToNat (rank c) 
+  South_east => let r = finToNat (rank c) 
                 in case r of
                   Z => Nothing
                   S n => case natToFin n 12 of
