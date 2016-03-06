@@ -24,6 +24,8 @@ import Lightyear.Char
 import Board
 import Piece
 
+import Debug.Trace -- TODO
+
 %default total
 
 col : Char -> Piece_colour
@@ -112,15 +114,15 @@ to_vectors lists =
 ||| @for - textual representation of a position, as produced by Board.forsythe
 export from_forsythe : (for : String) -> Either String Board
 from_forsythe for = case parse (parse_ranks) for of
-  Left e      => Left e
+  Left e      => trace ("from_forsythe failed: " ++ e) $ Left e
   Right lists => case lists of
-        []       => Left "No ranks"
+        []       => trace "no ranks" $ Left "No ranks"
         [] :: xs => case init' xs of
-          Nothing => Left "No ranks"
+          Nothing => trace "no ranks 2" $ Left "No ranks"
           Just ys => case to_vectors ys of
-            Nothing => Left "Strange board geometry"
+            Nothing => trace ("strange geometry: " ++ for) $ Left "Strange board geometry"
             Just b  => Right b
-        _        => Left "Missing leading / (?)"
+        _        => trace "missing leading /" $ Left "Missing leading / (?)"
     
 
     

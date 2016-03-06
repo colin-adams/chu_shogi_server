@@ -57,7 +57,7 @@ parse_format = do
 
 parse_single_string : My_parser String
 parse_single_string = do
-  name  <-many letter
+  name  <- many (noneOf "\n")
   nl    <- endOfLine
   pure $ pack name
 
