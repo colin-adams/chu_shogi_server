@@ -164,9 +164,13 @@ is_valid_move_stage_1 m (Running b _ _ _) = case m of
        Just _  => (False, "Can't make a non-capturing move to an occupied square")
        Nothing => case can_jump_to p c1 b c2 of
          (True, _)  => check_promotion c1 c2 b pr dec False 
-         (False, v) => case can_range_to p c1 b v c2 of
-           (True, _)  => check_promotion c1 c2 b pr dec False
-           (False, v') => (False, v')
+         (False, v) =>  case length v of
+           Z => (False, "postcondition violation of can_jump_to")
+           _ => case can_range_to p c1 b v c2 of
+             (True, _)  => check_promotion c1 c2 b pr dec False
+             (False, v') =>  case length v of
+               Z => (False, "postcondition violation of can_range_to")
+               _ => (False, v')
   
   Capture p c1 p2 c2 pr dec    =>  case is_same_piece_at p c1 b of
    False => (False, "Selected piece is not piece on starting square")
@@ -188,7 +192,9 @@ is_valid_move_stage_1 m (Running b _ _ _) = case m of
 ||| A reason is given why validity fails
 is_valid_move_stage_2 : (m : Move) -> (state : Game_state) -> (Bool, String)
 is_valid_move_stage_2 m st = case is_valid_move_stage_1 m st of
-  (False, v) => (False, v)
+  (False, v) =>  case length v of
+    Z => (False, "postcondition violation of is_valid_move_stage 1")
+    _ => (False, v)
   _          => case st of
     Not_running _         => (False, "No game")
     Running b mv_st _ stk =>  case m of
@@ -295,7 +301,9 @@ is_repetition b st pos = case st of
 ||| A reason is given why validity fails
 export is_valid_move : (m : Move) -> (state : Game_state) -> (Bool, String)
 is_valid_move m st = case is_valid_move_stage_2 m st of
-  (False, v) => (False, v)
+  (False, v) => case length v of
+    Z => (False, "postcondition violation of is_valid_move_stage_2")
+    _ => (False, v)
   _          => case st of
     Not_running _         => (False, "No game") -- can't happen here
     Running b _ _ _ => let (b', st') = updated_by_move m b st

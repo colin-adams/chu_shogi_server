@@ -88,7 +88,11 @@ put_move mv gs hcps = do
   case choose truth of
     Right _  => do
       case is_valid_move mv gs of
-        (_, reas) => fail $ "Move (" ++ show mv ++ ") is invalid at that point in the game. Reason is " ++ reas
+        (False, reas) => fail $ "Move (" ++ show mv ++ ") is invalid at that point in the game. Reason is " ++ reas
+        (True, _) => do
+          case is_move_valid (mv, gs) of
+            False => fail "inconsistency with choose"
+            True => fail "so how do we manage to end up here?"
     Left Oh => do
       let vm = (mv, gs, Oh)
       let gs' = update_with_valid_move vm
@@ -171,7 +175,7 @@ single_move : (abbrev : String) -> (c1 : Coordinate) -> (move_type : String) -> 
 single_move abbrev c1 move_type c2 prm dcl = do
   (Running b mv_st kc stk, hcps) <- get | (Not_running reas, hcps2) => fail "Impossible game state"
   case piece_at c1 b of
-    Nothing => fail "No piece at source square"
+    Nothing => fail $ "No piece at source square: " ++ abbrev ++ ", " ++ show c1 ++ ", " ++ move_type ++ " " ++ show c2
     Just (p, pr_st) => do
       if abbrev /= (abbreviation $ piece_type p) then
         fail $ "Wrong abbreviation: " ++ abbrev ++ " at " ++ show c1 ++ ", actual piece on board is " ++  (abbreviation $ piece_type p) ++ "\n" ++ (display_board b)
@@ -193,7 +197,7 @@ double_move : (abbrev : String) -> (c1 : Coordinate) -> (move_type : String) -> 
 double_move abbrev c1 move_type c2 = do
   (Running b mv_st kc stk, hcps) <- get | (Not_running reas, hcps2) => fail "Impossible game state"
   case piece_at c1 b of
-    Nothing => fail "No piece at source square"
+    Nothing => fail $ "No piece at source square: " ++ abbrev ++ ", " ++ show c1 ++ ", " ++ move_type ++ " " ++ show c2
     Just (p, pr_st) => do
       if abbrev /= (abbreviation $ piece_type p) then
         fail $ "Wrong abbreviation: " ++ abbrev ++ ", actual piece on board is " ++  (abbreviation $ piece_type p)

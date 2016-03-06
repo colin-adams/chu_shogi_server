@@ -203,7 +203,7 @@ promotion_opportunity r1 r2 col st capt = let st_in  = in_promotion_zone r1 col
     _              => case st of
       No_promotion        => (False, "This piece type does not have a promotion")
       Declined_to_promote => (capt, "Can't promote after declining except by capturing, or re-entering the promotion zone")
-      Not_yet_promoted    => (True, "")
+      Not_yet_promoted    => (True, "Not yet promoted")
 
 ||| Is piece moving from @source to @destination on @board capable of @promoting and @declining when @capturing?
 |||
@@ -226,7 +226,7 @@ check_promotion c1 c2 b pr dec capt = case piece_at c1 b of
         (True, True)   => (False, "Can't simulataneously both promote and decline to promote")
         (False, True)  => opp
         (True, False)  => opp
-        (False, False) => (not (fst opp), snd opp)
+        (False, False) => (True, snd opp)
  
 ||| Can @piece jump to @destination?
 |||
@@ -254,21 +254,24 @@ can_jump_to p c1 b c2 = case direction_and_range c1 c2 of
 ||| We also return a validity message
 can_reach_from : (target : Coordinate) -> (source : Coordinate) -> (board : Board) -> (direction : Direction) -> (moves : Nat) ->
  (colour : Piece_colour) -> (message :String) -> (Bool, String)
-can_reach_from c2 c1 b d n col message = case next_square c1 d of
-  Nothing => (False, message ++ ", No additional square on the board in direction " ++ (show d))
-  Just c' => case piece_at c' b of
-    Nothing => case c' == c2 of
-      True => (True, "")
-      False => case n of
-        Z   => (False, message ++ ", can't reach that square within piece's range")
-        S m => can_reach_from c2 c' b d m col message
-    Just (p, _) => case piece_colour p == col of
-      True  => (False, message ++ ", Can't capture a piece of your own side")
-      False =>  case c' == c2 of
-        True  => (True, "")
-        False => case n of
-          Z   => (False, message ++ ", Can't reach that square within piece's range")
-          S m => can_reach_from c2 c' b d m col message
+can_reach_from c2 c1 b d n col message = 
+  case length message of
+    Z => (False, "Precondition violation in can_reach_from - zero length message")
+    _ => case next_square c1 d of
+      Nothing => (False, message ++ ", No additional square on the board in direction " ++ (show d))
+      Just c' => case piece_at c' b of
+        Nothing => case c' == c2 of
+          True => (True, "")
+          False => case n of
+            Z   => (False, message ++ ", can't reach that square within piece's range")
+            S m => can_reach_from c2 c' b d m col message
+        Just (p, _) => case piece_colour p == col of
+          True  => (False, message ++ ", Can't capture a piece of your own side")
+          False =>  case c' == c2 of
+            True  => (True, "")
+            False => case n of
+              Z   => (False, message ++ ", Can't reach that square within piece's range")
+              S m => can_reach_from c2 c' b d m col message
                             
 ||| Can @piece range to @destination?
 |||

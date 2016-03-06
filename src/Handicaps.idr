@@ -31,12 +31,11 @@ import Move_state
 import Move
 import Data.Stack
 
-import Debug.Trace
 %default total
 
 ||| Handicap names paired with file-names of forsythe of starting position
 handicap_names_and_positions : List (String, String)
-handicap_names_and_positions = [("Free King", "/FK.fsy"), ("Free King and a Dragon King", "/FK+DK.fsy")]
+handicap_names_and_positions = [("Free King", "/FK.fsy"), ("Free King (alternate)", "/FKa.fsy"), ("Free King and a Dragon King", "/FK+DK.fsy")]
 
 ||| Names of all handicaps known to the server
 export available_handicap_names : List (String)
@@ -52,7 +51,7 @@ read_handicap dir (nm, fnm) = do
   ei <- Effect.File.Default.readFile (dir ++ fnm)
   case ei of
     Left e  => pure (nm, "")
-    Right c => trace ("Contents read from file was: " ++ c) $ pure (nm, c)
+    Right c => pure (nm, c)
           
 ||| Transform @inputs from a list of handicap names and corresponding position-file-names to a list of handicap names and corresponding positions
 |||
@@ -67,8 +66,8 @@ read_handicaps dir names = mapE (\x => read_handicap dir x) names
 ||| @name_and_contents - handicap name paired with starting position
 add_handicap  :  (name_and_contents : (String, String)) -> (dictionary : Dict String Game_state) -> Dict String Game_state
 add_handicap (hdcp, cont) dict =
-  case trace hdcp (from_forsythe cont) of
-    Left e => trace cont dict -- TODO error reporting?
+  case from_forsythe cont of
+    Left e => dict -- TODO error reporting?
     Right b => let posn = insert (forsythe b) 1 empty
                    wht_posns = posn
                    blk_posns = empty
@@ -76,7 +75,7 @@ add_handicap (hdcp, cont) dict =
                    mv_state  = Make_move_state False 1 False empty empty
                    mv_state' = Make_move_state False 1 False wht_posns blk_posns
                    stk       = pushS (b, mv_state, kc, Nothing, mkStack) mkStack
-               in trace "updateing" $ insert hdcp (Running b mv_state' kc stk) dict
+               in insert hdcp (Running b mv_state' kc stk) dict
                    
 ||| Read map of handicap names to initial game states from @directory
 |||
