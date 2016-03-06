@@ -68,7 +68,17 @@ Move_stack = Stack (Board, Move_state, King_count, (Maybe Move), (Stack Move))
 
 
 ||| Why is the game not running?
-public export data Termination_reason = Not_yet_started | Black_won | White_won | Draw
+public export data Termination_reason = 
+  ||| First move has yet to be played, clocks started, etc.
+  Not_yet_started | 
+  ||| game has finished with a win for black
+  Black_won | 
+  ||| game has finished with a win for white
+  White_won | 
+  ||| game has finished with an agreed or enforced draw
+  Draw | 
+  ||| Unknown handicap or time control, etc.
+  Invalid_setup
 
 ||| The top-level state of the game. 
 public export data Game_state = 
