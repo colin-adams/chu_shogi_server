@@ -21,6 +21,7 @@ import Csg_parser
 import Effect.File
 import Effect.State
 import Effect.StdIO
+import Effect.Exception
 import Effects
 import Game_state
 import Handicaps
@@ -28,7 +29,7 @@ import Move_state
 import Board
 import Data.AVL.Dict
 
-historical_game_test : String -> Effects.SimpleEff.Eff () [FILE_IO (), STDIO, STATE (Dict String Game_state)]
+historical_game_test : String -> Effects.SimpleEff.Eff () [FILE_IO (), STDIO, STATE (Dict String Game_state), EXCEPTION String]
 historical_game_test file_name = 
   do
     handicaps_map "../files"
@@ -44,31 +45,31 @@ historical_game_test file_name =
       
 ||| Test setting up a correct final position from a .csg file
 export test_historical_game_1 : IO ()
-test_historical_game_1 = runInit [(), (), empty]  (historical_game_test "../files/hist1.csg")
+test_historical_game_1 = runInit [(), (), empty, ()]  (historical_game_test "../files/hist1.csg")
 
       
 ||| Test setting up a correct final position from a .csg file
 export test_historical_game_2 : IO ()
-test_historical_game_2 = runInit [(), (), empty]  (historical_game_test "../files/hist2.csg")
+test_historical_game_2 = runInit [(), (), empty, ()]  (historical_game_test "../files/hist2.csg")
       
 ||| Test setting up a correct final position from a .csg file
 export test_historical_game_3 : IO ()
-test_historical_game_3 = runInit [(), (), empty]  (historical_game_test "../files/hist3.csg")
+test_historical_game_3 = runInit [(), (), empty, ()]  (historical_game_test "../files/hist3.csg")
 
       
 ||| Test setting up a correct final position from a .csg file
 export test_historical_game_4 : IO ()
-test_historical_game_4 = runInit [(), (), empty]  (historical_game_test "../files/hist4.csg")
+test_historical_game_4 = runInit [(), (), empty, ()]  (historical_game_test "../files/hist4.csg")
 
       
 ||| Test setting up a correct final position from a .csg file
 export test_historical_game_5 : IO ()
-test_historical_game_5 = runInit [(), (), empty]  (historical_game_test "../files/hist5.csg")
+test_historical_game_5 = runInit [(), (), empty, ()]  (historical_game_test "../files/hist5.csg")
 
       
 ||| Test setting up a correct final position from a .csg file
 export test_historical_game_6 : IO ()
-test_historical_game_6 = runInit [(), (), empty]  (historical_game_test "../files/hist6.csg")
+test_historical_game_6 = runInit [(), (), empty, ()]  (historical_game_test "../files/hist6.csg")
 
 
   

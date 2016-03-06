@@ -292,7 +292,7 @@ from_csg = do
           put (gs, handicaps)
           blk_nm <- parse_name
           wht_nm <- parse_name
-          skip parse_name  -- The next lines are some kind of comment facility I think - TODO need to check.
+          skip parse_name  -- The next lines are some kind of comment facility I think - could check, but not worth it - this is only for the historical games.
           skip endOfLine
           skip endOfLine
           skip endOfLine

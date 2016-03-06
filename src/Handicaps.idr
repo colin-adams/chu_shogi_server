@@ -24,6 +24,7 @@ import Game_state
 import Effects
 import Effect.File
 import Effect.State
+import Effect.Exception
 import Forsythe_parser
 import Piece
 import Board
@@ -46,28 +47,28 @@ available_handicap_names = map fst handicap_names_and_positions
 |||
 ||| @directory          - path-name of directory containing .fsy files
 ||| @name_and_file_name - handicap name and file-name for corresponding position
-partial read_handicap : (directory : String) -> (name_and_file_name : (String, String)) -> Eff (String, String) [FILE_IO ()]
+partial read_handicap : (directory : String) -> (name_and_file_name : (String, String)) -> Eff (String, String) [FILE_IO (), EXCEPTION String]
 read_handicap dir (nm, fnm) = do
   ei <- Effect.File.Default.readFile (dir ++ fnm)
   case ei of
-    Left e  => pure (nm, "")
+    Left e  => raise e
     Right c => pure (nm, c)
           
 ||| Transform @inputs from a list of handicap names and corresponding position-file-names to a list of handicap names and corresponding positions
 |||
 ||| @directory - path-name of directory containing .fsy files
 ||| @names     - handicap names and corresponding position-file-names
-partial read_handicaps : (directory : String) -> (names : List (String, String)) -> Eff (List (String, String)) [FILE_IO ()]
+partial read_handicaps : (directory : String) -> (names : List (String, String)) -> Eff (List (String, String)) [FILE_IO (), EXCEPTION String]
 read_handicaps dir names = mapE (\x => read_handicap dir x) names
   
 ||| Add handicap named and given in @name_and_contents to @dictionary
 ||| 
 ||| @dictionary        - handicaps to be added to
 ||| @name_and_contents - handicap name paired with starting position
-add_handicap  :  (name_and_contents : (String, String)) -> (dictionary : Dict String Game_state) -> Dict String Game_state
+add_handicap  :  (name_and_contents : (String, String)) -> (dictionary : Dict String Game_state) -> Either String (Dict String Game_state)
 add_handicap (hdcp, cont) dict =
   case from_forsythe cont of
-    Left e => dict -- TODO error reporting?
+    Left e => Left e
     Right b => let posn = insert (forsythe b) 1 empty
                    wht_posns = posn
                    blk_posns = empty
@@ -75,19 +76,29 @@ add_handicap (hdcp, cont) dict =
                    mv_state  = Make_move_state False 1 False empty empty
                    mv_state' = Make_move_state False 1 False wht_posns blk_posns
                    stk       = pushS (b, mv_state, kc, Nothing, mkStack) mkStack
-               in insert hdcp (Running b mv_state' kc stk) dict
-                   
+               in Right $ insert hdcp (Running b mv_state' kc stk) dict
+
+update_state_from_handicaps : List (String, String) -> Eff () [STATE (Dict String Game_state), EXCEPTION String] 
+update_state_from_handicaps Nil = pure () 
+update_state_from_handicaps (x::xs) = do 
+  dict <- get
+  let ei = add_handicap x dict
+  case ei of
+    Left e => raise e
+    Right d => put d
+  update_state_from_handicaps xs 
+                                                    
 ||| Read map of handicap names to initial game states from @directory
 |||
 ||| @directory - physical location for .fsy files describing handicap positions
-partial export handicaps_map : (directory : String) -> Eff () [FILE_IO(), STATE (Dict String Game_state)]
+partial export handicaps_map : (directory : String) -> Eff () [FILE_IO(), STATE (Dict String Game_state), EXCEPTION String]
 handicaps_map dir = do
   put empty
   ei <- Effect.File.Default.readFile (dir ++ "/EVEN.fsy")
   case ei of
-      Left e  => pure ()
+      Left e  => raise e
       Right c => case from_forsythe c of
-        Left e  => pure ()
+        Left e  => raise e
         Right b => let posn = insert (forsythe b) 1 empty
                        blk_posns = posn
                        wht_posns = empty
@@ -99,8 +110,7 @@ handicaps_map dir = do
                    in do
                      hdcps <- read_handicaps dir handicap_names_and_positions
                      put even_dict
-                     _ <- mapE (\x => Effect.State.update (add_handicap x)) hdcps
-                     dict <- get
-                     pure ()
+                     update_state_from_handicaps hdcps
+
 
 
