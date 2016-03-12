@@ -131,13 +131,13 @@ igui_move b mv_st kc stk p c1 c2 col = do
 
 capture_and_move : Piece -> Coordinate -> Piece -> Coordinate -> Coordinate -> My_parser Valid_move
 capture_and_move p c1 p2 c2 c3 = do
-  let mv = Double_move p c1 p2 c2 Nothing c3 
+  let mv = Capture_and_move p c1 p2 c2 c3 
   (gs, hcps) <- get
   put_move mv gs hcps
 
 double_capture : Piece -> Coordinate -> Piece -> Coordinate -> Piece -> Coordinate -> My_parser Valid_move
 double_capture p c1 p2 c2 p3 c3 = do
-  let mv = Double_move p c1 p2 c2 (Just p3) c3 
+  let mv = Double_capture p c1 p2 c2 p3 c3 
   (gs, hcps) <- get
   put_move mv gs hcps
 
@@ -231,7 +231,7 @@ double_move abbrev c1 move_type c2 = do
           else
             fail "Double move must capture on the first move"
         else
-          fail "Incorrect piece colour for move"
+          fail "Incorrect piece colour for double move"
         
 ||| Parse + prefix
 parse_promoted : My_parser (Maybe Char)

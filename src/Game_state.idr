@@ -165,26 +165,45 @@ was_lion_capture p1 p2 p3 = case is_lion (piece_type p1) of
       Nothing  => False
       Just p3' => is_lion (piece_type p3')
 
-||| New state from capturing @p2 on @c2 by @p on @c1 and then moving onto @c3, possibly capturing @p3 there, on @bd in @mv_st with @kc and @stk
+||| New state from capturing @p2 on @c2 by @p on @c1 and then moving onto @c3, capturing @p3 there, on @bd in @mv_st with @kc and @stk
 |||
 ||| @p1 - the piece that captures
 ||| @c1 - location of @p1
 ||| @p2 - the first piece that is captured
 ||| @c2 - location of @p2
-||| @p3 - possible piece @c3
+||| @p3 - piece @c3
 ||| @c3 - destination
 ||| @bd - the old position
 ||| @mv_st - the old move state
 ||| @kc - the old victory conditions
 ||| @stk the old move stack                                                                       
-updated_state_from_double_move : (p1 : Piece) -> (c1 : Coordinate) -> (p2 : Piece) -> (c2 : Coordinate) -> (p3 : Maybe Piece) -> (c3 : Coordinate) -> (bd : Board) ->  (mv_st : Move_state) -> (kc : King_count) -> (stk : Move_stack) -> (Board, Move_state, King_count, Move_stack)  
-updated_state_from_double_move p1 c1 p2 c2 p3 c3 bd mv_st kc stk = let bd'    = with_piece_at (p1, No_promotion) c3 (without_piece_at c2 (without_piece_at c1 bd))
-                                                                       kc'    = king_count_from_board bd'
-                                                                       mv     = Double_move p1 c1 p2 c2 p3 c3
-                                                                       stk'   = pushS (bd, mv_st, kc, (Just mv), empty) stk 
-                                                                       mv_st' = next_move mv_st (was_lion_capture p1 p2 p3) (forsythe bd') 
-                                                                   in (bd', mv_st', kc', stk')
+updated_state_from_double_capture : (p1 : Piece) -> (c1 : Coordinate) -> (p2 : Piece) -> (c2 : Coordinate) -> (p3 : Piece) -> (c3 : Coordinate) -> (bd : Board) ->  (mv_st : Move_state) -> (kc : King_count) -> (stk : Move_stack) -> (Board, Move_state, King_count, Move_stack)  
+updated_state_from_double_capture p1 c1 p2 c2 p3 c3 bd mv_st kc stk = let bd'    = with_piece_at (p1, No_promotion) c3 (without_piece_at c2 (without_piece_at c1 bd))
+                                                                          kc'    = king_count_from_board bd'
+                                                                          mv     = Double_capture p1 c1 p2 c2 p3 c3
+                                                                          stk'   = pushS (bd, mv_st, kc, (Just mv), empty) stk 
+                                                                          mv_st' = next_move mv_st (was_lion_capture p1 p2 (Just p3)) (forsythe bd')
+                                                                   in  (bd', mv_st', kc', stk')
 
+
+||| New state from capturing @p2 on @c2 by @p on @c1 and then moving onto @c3, on @bd in @mv_st with @kc and @stk
+|||
+||| @p1 - the piece that captures
+||| @c1 - location of @p1
+||| @p2 - the first piece that is captured
+||| @c2 - location of @p2
+||| @c3 - destination
+||| @bd - the old position
+||| @mv_st - the old move state
+||| @kc - the old victory conditions
+||| @stk the old move stack                                                                       
+updated_state_from_capture_and_move : (p1 : Piece) -> (c1 : Coordinate) -> (p2 : Piece) -> (c2 : Coordinate) -> (c3 : Coordinate) -> (bd : Board) ->  (mv_st : Move_state) -> (kc : King_count) -> (stk : Move_stack) -> (Board, Move_state, King_count, Move_stack)  
+updated_state_from_capture_and_move p1 c1 p2 c2 c3 bd mv_st kc stk = let bd'    = with_piece_at (p1, No_promotion) c3 (without_piece_at c2 (without_piece_at c1 bd))
+                                                                         kc'    = king_count_from_board bd'
+                                                                         mv     = Capture_and_move p1 c1 p2 c2 c3
+                                                                         stk'   = pushS (bd, mv_st, kc, (Just mv), empty) stk 
+                                                                         mv_st' = next_move mv_st (was_lion_capture p1 p2 Nothing) (forsythe bd')
+                                                                   in  (bd', mv_st', kc', stk')
 
 ||| New state from capturing @p2 on @c2 by @p on @c1 with promotion status given by @pr @dec  on @bd in @mv_st with @kc and @stk
 |||
@@ -238,11 +257,12 @@ updated_state_from_simple_move p1 c1 c2 pr dec bd mv_st kc stk = let pr_st = pro
 ||| @stk the old move stack
 updated_state_from_move : (mv : Move) -> (bd : Board) -> (mv_st : Move_state) -> (kc : King_count) -> (stk : Move_stack) -> (Board, Move_state, King_count, Move_stack)
 updated_state_from_move mv bd mv_st kc stk = case mv of
-  Pass p c1 c2                  => updated_state_from_pass p c1 c2 bd mv_st kc stk
-  Igui p1 c1 p2 c2              => updated_state_from_igui p1 c1 p2 c2 bd mv_st kc stk
-  Double_move p1 c1 p2 c2 p3 c3 => updated_state_from_double_move p1 c1 p2 c2 p3 c3 bd mv_st kc stk
-  Capture p1 c1 p2 c2 pr dec    => updated_state_from_capture p1 c1 p2 c2 pr dec bd mv_st kc stk
-  Simple_move p c1 c2 pr dec    => updated_state_from_simple_move p c1 c2 pr dec bd mv_st kc stk
+  Pass p c1 c2                     => updated_state_from_pass p c1 c2 bd mv_st kc stk
+  Igui p1 c1 p2 c2                 => updated_state_from_igui p1 c1 p2 c2 bd mv_st kc stk
+  Double_capture p1 c1 p2 c2 p3 c3 => updated_state_from_double_capture p1 c1 p2 c2 p3 c3 bd mv_st kc stk
+  Capture_and_move p1 c1 p2 c2 c3  => updated_state_from_capture_and_move p1 c1 p2 c2 c3 bd mv_st kc stk
+  Capture p1 c1 p2 c2 pr dec       => updated_state_from_capture p1 c1 p2 c2 pr dec bd mv_st kc stk
+  Simple_move p c1 c2 pr dec       => updated_state_from_simple_move p c1 c2 pr dec bd mv_st kc stk
 
 ||| New board and game state resulting from applying @move to @board over a running state
 |||

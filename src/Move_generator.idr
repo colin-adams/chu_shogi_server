@@ -65,11 +65,11 @@ can_use_lion_power_to p c occ = case occ of
   
 ||| Double-capture move by piece at @source capturing @piece at @intermediate then capturing on @target
 double_capture_from : (source : Occupied_location) -> (prisoner : Piece) -> (intermediate : Coordinate ) -> (target : Occupied_location) -> Move
-double_capture_from ((c, b), p) p2 c2 ((c3, b2), p3) = Double_move p c p2 c2 (Just p3) c3
+double_capture_from ((c, b), p) p2 c2 ((c3, b2), p3) = Double_capture p c p2 c2 p3 c3
 
 ||| Capture-and-move by piece at @source capturing @piece at @intermediate then moving to @destination
 capture_and_move_from : (source : Occupied_location) -> (prisoner : Piece) -> (intermediate : Coordinate ) -> (destination : Coordinate) -> Move
-capture_and_move_from ((c, b), p) p2 c2 c3 = Double_move p c p2 c2 Nothing c3
+capture_and_move_from ((c, b), p) p2 c2 c3 = Capture_and_move p c p2 c2 c3
 
 ||| Capture by piece at @source of @prisoner on @intermediate then return to @source
 igui_from : (source : Occupied_location) -> (prisoner : Piece) -> (intermediate : Coordinate ) -> Move

@@ -28,8 +28,10 @@ public export data Move =
   Pass Piece Coordinate Coordinate |
   ||| Capture by piece @origin of piece @target without moving
   Igui Piece Coordinate Piece Coordinate |
-  ||| Other double move by piece @origin capturing piece @target1 then on to @target 2 (possibly capturing)
-  Double_move Piece Coordinate Piece Coordinate (Maybe Piece) Coordinate |
+  ||| Double move by piece @origin capturing piece @target1 then capturing on @target 2
+  Double_capture Piece Coordinate Piece Coordinate Piece Coordinate |
+  ||| Other double move by piece @origin capturing piece @target1 then moving on to @target 2
+  Capture_and_move Piece Coordinate Piece Coordinate Coordinate |
   ||| Capture by piece @origin of piece @target @promoted? @declined to promote?
   Capture Piece Coordinate Piece Coordinate Bool Bool |
   ||| Move by piece @origin to @target @promoted? @declined to promote?
@@ -44,11 +46,12 @@ is_lion_capture m = case m of
   Capture p _ p2 _ _ _      => case is_lion (piece_type p2) of
     True  => not (is_lion (piece_type p))
     False => False
-  Double_move p _ p2 _ p3 _ => case is_lion (piece_type p) of
+  Double_capture p _ p2 _ p3 _ => case is_lion (piece_type p) of
     True  => False
-    False => case p3 of
-      Nothing  => is_lion (piece_type p2)
-      Just p3' => is_lion (piece_type p2) || is_lion (piece_type p3')
+    False => is_lion (piece_type p2) || is_lion (piece_type p3)
+  Capture_and_move p _ p2 _  _ => case is_lion (piece_type p) of
+    True  => False
+    False => is_lion (piece_type p2)
 
 ||| Modified TSA notation for a move
 public export Show Move where
@@ -66,9 +69,6 @@ public export Show Move where
                                                                  True  => "="
                                                                  False => ""
                                         in (abbreviation $ piece_type p) ++ " " ++ (show c1) ++ " - " ++ (show c2) ++ ind
-  show (Double_move p c1 p2 c2 p3 c3) = let sep = case p3 of
-                                                       Nothing => " - "
-                                                       Just _  => " x "
-                                        in (abbreviation $ piece_type p) ++ " " ++ (show c1) ++ " x " ++ (show c2) ++ 
-                                          sep ++ (show c3)
+  show (Double_capture p c1 p2 c2 p3 c3) = (abbreviation $ piece_type p) ++ " " ++ (show c1) ++ " x " ++ (show c2) ++ " x " ++ (show c3)
+  show (Capture_and_move p c1 p2 c2 c3) = (abbreviation $ piece_type p) ++ " " ++ (show c1) ++ " x " ++ (show c2) ++  " - " ++ (show c3)
                                             
