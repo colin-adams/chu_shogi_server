@@ -212,30 +212,30 @@ is_valid_move_stage_2 m st = case is_valid_move_stage_1 m st of
         False => case (last_move_lion_by_non_lion mv_st) of -- non-lion capturing
           False => (True, "")
           True => case is_lion (piece_type p2) of 
-            True  => case is_protected c2 (piece_colour p2) b of
+            True  => case is_protected c2 (piece_colour p2) (without_piece_at c1 b) of
               True  => (False, "Non-lion capture of protected lion after non-lion capture of lion")
               False => case is_lion (piece_type p3) of
                   False => (True, "")
-                  True  => case is_protected c3 (piece_colour p3) b of
+                  True  => case is_protected c3 (piece_colour p3) (without_piece_at c1 b) of
                     True  => (False, "Non-lion capture of protected lion after non-lion capture of lion")
                     False => (True, "Okazaki")
             False => case is_lion (piece_type p3) of
                 False => (True, "") -- no lions are involved
-                True => case is_protected c2 (piece_colour p3) b of
+                True => case is_protected c2 (piece_colour p3) (without_piece_at c1 b) of
                   True  => (False, "Non-lion capture of protected lion after non-lion capture of lion")
                   False => (True, "Okazaki")
         True  => case is_lion (piece_type p3) of
             False => (True, "")
             True  => case is_pawn_or_go_between p2 of
               False => (True, "")
-              True  => case is_protected c3 (piece_colour p3) b of
+              True  => case is_protected c3 (piece_colour p3) (without_piece_at c1 b) of
                 False => (True, "")
                 True  => (False, "Cannot capture protected lion at distance 2 when first piece is pawn or go-between")
       Capture_and_move p1 c1 p2 c2 c3 => case is_lion (piece_type p1) of
         False => case (last_move_lion_by_non_lion mv_st) of -- non-lion capturing
           False => (True, "")
           True => case is_lion (piece_type p2) of 
-            True  => case is_protected c2 (piece_colour p2) b of
+            True  => case is_protected c2 (piece_colour p2) (without_piece_at c1 b) of
               True  => (False, "Non-lion capture of protected lion after non-lion capture of lion")
               False => (True, "Okazaki") -- single capture
             False => (True, "") -- no lions involved, single capture
@@ -245,7 +245,7 @@ is_valid_move_stage_2 m st = case is_valid_move_stage_1 m st of
           False => (True, "")
           True  => case (last_move_lion_by_non_lion mv_st) of
             False => (True, "")
-            True  => case is_protected c2 (piece_colour p2) b of
+            True  => case is_protected c2 (piece_colour p2) (without_piece_at c1 b) of
               True  => (False, "Non-lion capture of protected lion after non-lion capture of lion")
               False => (True, "Okazaki")
         True  => case is_lion (piece_type p2) of -- moving lion
@@ -257,7 +257,7 @@ is_valid_move_stage_2 m st = case is_valid_move_stage_1 m st of
                 (True, "") -- Ln x Ln at a distance of 1
               else
                 if d == 2 then
-                  case is_protected c2 (piece_colour p2) b of
+                  case is_protected c2 (piece_colour p2) (without_piece_at c1 b) of
                     True  => (False, "Protected lion at distance 2")
                     False => (True, "")
                 else
